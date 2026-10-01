@@ -1,0 +1,27 @@
+Objetivo: construir un marco de evaluación, basado en evidencia, para determinar si un sistema que se presenta como "plataforma tecnológica" realmente lo es, o si es un producto, un servicio compartido, un framework, una librería o middleware con otro nombre.
+
+Contexto: lo voy a usar en una organización bancaria grande (arquitectura empresarial, cloud híbrido, móvil, integración por eventos) para evaluar iniciativas internas y ofertas de proveedores. Necesito criterios que se puedan verificar, no definiciones de marketing.
+
+Cubre las dos acepciones del término y sepáralas explícitamente:
+1. Plataforma interna / de ingeniería (Internal Developer Platform, platform engineering, plataformas de capacidades compartidas como datos, IA, integración o identidad).
+2. Plataforma de negocio / ecosistema (mercados de dos o más lados, efectos de red, terceros que construyen sobre ella).
+
+Prioriza estas fuentes primarias y busca otras de rigor equivalente:
+- CNCF: Platforms White Paper y Platform Engineering Maturity Model (TAG App Delivery).
+- Team Topologies (Skelton y Pais): "platform as a product", "Thinnest Viable Platform", reducción de carga cognitiva.
+- Evan Bottcher, "What I talk about when I talk about platforms" (martinfowler.com), y otros artículos de Thoughtworks / Technology Radar sobre plataformas.
+- DORA / Accelerate State of DevOps (especialmente el reporte 2024 y sus hallazgos sobre platform engineering).
+- Gartner sobre platform engineering, con definiciones citadas directamente.
+- Literatura académica de estrategia de plataformas: Gawer y Cusumano (industry platforms, platform leadership), Tiwana (Platform Ecosystems), Parker, Van Alstyne y Choudary (Platform Revolution), Baldwin y Woodard (arquitectura de plataformas: núcleo estable y complementos variables).
+- Guías de platform engineering de Microsoft, Google Cloud y AWS, y la documentación de Backstage. Úsalas como referencia técnica, no como prueba de valor.
+Descarta blogs de proveedores que solo vendan producto, salvo que aporten datos o casos medibles.
+
+Entregables:
+A. Definiciones operativas de cada acepción, citando la fuente. Incluye en qué difiere una plataforma de: producto, servicio compartido, framework, librería, middleware y "sistema monolítico grande".
+B. Lista de criterios necesarios (si falta uno, no es plataforma) y criterios de madurez (gradúan qué tan buena es). Para cada criterio: la pregunta de validación, la evidencia que la responde (artefactos, métricas, comportamiento observable) y una señal de alarma (red flag). Considera al menos: múltiples consumidores independientes; autoservicio sin tickets; contratos y APIs estables y versionados; extensibilidad sin modificar el núcleo; capacidad de los consumidores para evolucionar de forma independiente; gestión como producto (roadmap, product owner, feedback de usuarios, adopción voluntaria frente a obligatoria); SLOs y soporte; documentación y golden paths; gobierno y modelo de financiación; reducción medible de carga cognitiva o de lead time; efectos de red y complementadores (para plataformas de negocio).
+C. Métricas cuantitativas para validar la tesis: número de equipos o consumidores, tasa de adopción, tiempo de onboarding, porcentaje de solicitudes resueltas por autoservicio, métricas DORA de los equipos consumidores, NPS o satisfacción del desarrollador, costo por consumidor y número de complementos de terceros. Incluye umbrales o benchmarks publicados cuando existan, indicando la fuente y el año.
+D. Antipatrones documentados: "plataforma" como renombre de un equipo de infraestructura, plataforma impuesta sin demanda, plataforma de un solo consumidor, "plataforma" que exige tickets, sobreconstrucción frente a la Thinnest Viable Platform.
+E. Una checklist final de 15 a 25 preguntas binarias o cuantificables, agrupadas por dimensión (técnica, producto, organizacional, económica, ecosistema), utilizable en un comité de arquitectura.
+F. Contradicciones o desacuerdos entre fuentes, y vacíos donde no hay evidencia empírica sólida.
+
+Reglas: cita la fuente de cada afirmación; distingue entre evidencia empírica, opinión de experto y afirmación de proveedor; no inventes métricas ni umbrales; si un dato no existe, dilo. Responde en español.
