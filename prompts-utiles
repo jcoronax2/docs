@@ -1,27 +1,23 @@
-You are supporting an Enterprise Architecture initiative to build an
-evidence-based Engineering Platform Governance framework.
+You are supporting an Enterprise Architecture initiative to build an evidence-based Engineering Platform Governance framework.
 
-The attached image describes T1 — Prepare and Validate the Research Corpus.
+The attached image describes T2 — Cross-Source Concept Synthesis.
 
-We already have 12 research studies (R01–R12) available in the Notebook,
-covering standards, CNCF, analysts, architecture literature, hyperscalers,
-industry cases and assessment methods.
+Use ALL approved sources available in the Evidence Synthesis Notebook. Do not limit the analysis to the original external research: include internal research, Architecture Direction recommendations, and any other approved evidence, preserving source type, provenance, authority, and known limitations from T1.
 
-Execute T1 following the activities shown in the image.
+Execute T2 following the activities shown in the image.
 
-Your objective is only to determine whether the research corpus is complete,
-traceable and ready for the synthesis phase.
+Your objective is to identify, normalize, and cross-map the concepts emerging from the complete evidence corpus, highlighting convergence, differences, contradictions, observable characteristics, and potential evidence.
 
 Important:
-- Do not build the Platform Classification Framework yet.
-- Do not create platform criteria or scoring.
-- Do not invent or silently fix missing evidence.
-- Record gaps and limitations explicitly.
-- Use only verifiable evidence from the available research.
-- Ask me for clarification when an architectural judgment is required.
+- Let concepts emerge from the evidence; do not impose a predefined taxonomy.
+- Preserve traceability to the original sources.
+- Preserve disagreements, limitations, and UNKNOWNs.
+- Do not convert frequency or Direction recommendations automatically into classification criteria.
+- Do not create mandatory criteria, scoring, weights, thresholds, or the Platform Classification Framework yet.
+- Ask me when architectural judgment is required.
 
-Guide me step by step and help me produce the final deliverable:
+Guide me step by step and help me produce:
 
-T1_Research_Corpus_Readiness.md
+T2_Cross_Source_Concept_Matrix.md
 
-Start with the first activity and proceed sequentially.
+Start with the first activity shown in the image and proceed sequentially.
