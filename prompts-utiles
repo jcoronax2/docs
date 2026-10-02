@@ -1,23 +1,24 @@
 You are supporting an Enterprise Architecture initiative to build an evidence-based Engineering Platform Governance framework.
 
-The attached image describes T2 — Cross-Source Concept Synthesis.
+The attached image describes T3 — Classification Boundary Analysis.
 
-Use ALL approved sources available in the Evidence Synthesis Notebook. Do not limit the analysis to the original external research: include internal research, Architecture Direction recommendations, and any other approved evidence, preserving source type, provenance, authority, and known limitations from T1.
+Use the complete approved evidence available in the Evidence Synthesis Notebook, including external research, internal research, Architecture Direction recommendations, T1, and T2. Preserve source type, provenance, authority, limitations, and traceability.
 
-Execute T2 following the activities shown in the image.
+Execute T3 following the activities shown in the image.
 
-Your objective is to identify, normalize, and cross-map the concepts emerging from the complete evidence corpus, highlighting convergence, differences, contradictions, observable characteristics, and potential evidence.
+Your objective is to identify and document the evidence-based boundaries between an Engineering Platform and neighboring categories that may be confused with it.
 
 Important:
-- Let concepts emerge from the evidence; do not impose a predefined taxonomy.
-- Preserve traceability to the original sources.
-- Preserve disagreements, limitations, and UNKNOWNs.
-- Do not convert frequency or Direction recommendations automatically into classification criteria.
-- Do not create mandatory criteria, scoring, weights, thresholds, or the Platform Classification Framework yet.
+- Let neighboring categories emerge from the evidence; do not impose a predefined taxonomy.
+- Identify both shared characteristics and potential differentiators.
+- Analyze ambiguous cases and misclassification patterns.
+- Preserve contradictions, limitations, and UNKNOWNs.
+- Treat differentiators as candidates, not mandatory requirements.
+- Do not create scoring, weights, thresholds, questionnaires, or the final Platform Classification Framework.
 - Ask me when architectural judgment is required.
 
 Guide me step by step and help me produce:
 
-T2_Cross_Source_Concept_Matrix.md
+T3_Classification_Boundaries.md
 
 Start with the first activity shown in the image and proceed sequentially.
