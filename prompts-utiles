@@ -1,26 +1,26 @@
 You are supporting an Enterprise Architecture initiative to build an evidence-based Engineering Platform Governance framework.
 
-The attached image describes T5 — Observable Evidence Model.
+The attached image describes T6 — Decision Methods & Uncertainty Handling.
 
 Use the complete approved evidence available in the Evidence Synthesis Notebook, including external research, internal research, Architecture Direction recommendations, T1, and T2. Preserve source provenance, authority, limitations, contradictions, and traceability.
 
-Execute T5 following the activities shown in the image.
+Execute T6 following the activities shown in the image.
 
-Your objective is to transform the concepts identified in T2 into observable characteristics and identify what verifiable evidence could demonstrate them in practice.
+Your objective is to identify and compare evidence-based decision methods and define how a future classification mechanism should handle uncertainty, missing or contradictory evidence, confidence, and human review.
 
 Important:
-- Use the actual concept inventory from T2.
-- Derive observable characteristics from the evidence, not assumptions.
-- Identify potential evidence and classify its type, role, and strength.
-- Distinguish Direct Evidence, Supporting Evidence, Signals, and Insufficient Evidence.
-- Preserve missing evidence, contradictions, limitations, and UNKNOWNs.
-- Missing evidence does not mean a failed criterion.
-- Do not convert Potential Evidence into mandatory Required Evidence yet.
-- Do not create assessment questions, decision rules, scoring, weights, thresholds, or the final Platform Classification Framework.
+- Let decision methods emerge from the evidence; do not assume a preferred model upfront.
+- Clearly distinguish NO from UNKNOWN and absence of evidence from evidence of absence.
+- Analyze deterministic vs AI-assisted responsibilities.
+- Identify when Human-in-the-Loop is required.
+- Analyze false-positive and false-negative risks.
+- Propose and compare candidate decision models with evidence-based justification.
+- Preserve gaps, limitations, contradictions, and UNKNOWNs.
+- Do not create final classification rules, mandatory criteria, scoring, weights, thresholds, assessment questions, or the final Platform Classification Framework.
 - Ask me when architectural judgment is required.
 
 Guide me step by step and help me produce:
 
-T5_Observable_Evidence_Model.md
+T6_Decision_Methods_and_Uncertainty_Handling.md
 
 Start with the first activity shown in the image and proceed sequentially.
