@@ -1,24 +1,26 @@
 You are supporting an Enterprise Architecture initiative to build an evidence-based Engineering Platform Governance framework.
 
-The attached image describes T3 — Classification Boundary Analysis.
+The attached image describes T5 — Observable Evidence Model.
 
-Use the complete approved evidence available in the Evidence Synthesis Notebook, including external research, internal research, Architecture Direction recommendations, T1, and T2. Preserve source type, provenance, authority, limitations, and traceability.
+Use the complete approved evidence available in the Evidence Synthesis Notebook, including external research, internal research, Architecture Direction recommendations, T1, and T2. Preserve source provenance, authority, limitations, contradictions, and traceability.
 
-Execute T3 following the activities shown in the image.
+Execute T5 following the activities shown in the image.
 
-Your objective is to identify and document the evidence-based boundaries between an Engineering Platform and neighboring categories that may be confused with it.
+Your objective is to transform the concepts identified in T2 into observable characteristics and identify what verifiable evidence could demonstrate them in practice.
 
 Important:
-- Let neighboring categories emerge from the evidence; do not impose a predefined taxonomy.
-- Identify both shared characteristics and potential differentiators.
-- Analyze ambiguous cases and misclassification patterns.
-- Preserve contradictions, limitations, and UNKNOWNs.
-- Treat differentiators as candidates, not mandatory requirements.
-- Do not create scoring, weights, thresholds, questionnaires, or the final Platform Classification Framework.
+- Use the actual concept inventory from T2.
+- Derive observable characteristics from the evidence, not assumptions.
+- Identify potential evidence and classify its type, role, and strength.
+- Distinguish Direct Evidence, Supporting Evidence, Signals, and Insufficient Evidence.
+- Preserve missing evidence, contradictions, limitations, and UNKNOWNs.
+- Missing evidence does not mean a failed criterion.
+- Do not convert Potential Evidence into mandatory Required Evidence yet.
+- Do not create assessment questions, decision rules, scoring, weights, thresholds, or the final Platform Classification Framework.
 - Ask me when architectural judgment is required.
 
 Guide me step by step and help me produce:
 
-T3_Classification_Boundaries.md
+T5_Observable_Evidence_Model.md
 
 Start with the first activity shown in the image and proceed sequentially.
