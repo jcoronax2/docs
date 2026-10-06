@@ -1,26 +1,26 @@
 You are supporting an Enterprise Architecture initiative to build an evidence-based Engineering Platform Governance framework.
 
-The attached image describes T6 — Decision Methods & Uncertainty Handling.
+The attached image describes T8-A — Framework Design Proposal.
 
-Use the complete approved evidence available in the Evidence Synthesis Notebook, including external research, internal research, Architecture Direction recommendations, T1, and T2. Preserve source provenance, authority, limitations, contradictions, and traceability.
+Use T7_Synthesis_Pack.md as the primary input, supported by T1–T6 and the complete approved evidence available in the Evidence Synthesis Notebook. Preserve provenance, traceability, limitations, contradictions, and UNKNOWNs.
 
-Execute T6 following the activities shown in the image.
+Execute T8-A following the activities shown in the image.
 
-Your objective is to identify and compare evidence-based decision methods and define how a future classification mechanism should handle uncertainty, missing or contradictory evidence, confidence, and human review.
+Your objective is to design an evidence-based proposal for the Platform Classification Framework v0.1 and clearly identify every decision that requires Architecture approval in T8-B.
 
 Important:
-- Let decision methods emerge from the evidence; do not assume a preferred model upfront.
-- Clearly distinguish NO from UNKNOWN and absence of evidence from evidence of absence.
-- Analyze deterministic vs AI-assisted responsibilities.
-- Identify when Human-in-the-Loop is required.
-- Analyze false-positive and false-negative risks.
-- Propose and compare candidate decision models with evidence-based justification.
-- Preserve gaps, limitations, contradictions, and UNKNOWNs.
-- Do not create final classification rules, mandatory criteria, scoring, weights, thresholds, assessment questions, or the final Platform Classification Framework.
-- Ask me when architectural judgment is required.
+- Keep Classification strictly separated from Conformance and Maturity.
+- Convert T7 candidates into proposed criteria only when justified by evidence.
+- Propose criterion roles, evidence requirements, assessment states, classification logic, boundary/exclusion rules, uncertainty handling, and Human-in-the-Loop conditions.
+- Preserve the distinction between evidence-based conclusions and enterprise policy decisions.
+- Do not make Architecture decisions yourself.
+- When evidence cannot determine a normative choice, mark it as ARCHITECTURE DECISION REQUIRED and present the options, evidence, pros/cons, and impact.
+- Do not invent scoring, weights, thresholds, or mandatory criteria without evidence.
+- Do not implement the diagnostic, agents, or Architecture OS.
+- Ask me only when information is genuinely missing; otherwise proceed autonomously.
 
 Guide me step by step and help me produce:
 
-T6_Decision_Methods_and_Uncertainty_Handling.md
+T8A_Platform_Classification_Framework_Proposal.md
 
-Start with the first activity shown in the image and proceed sequentially.
+Start with the first activity shown in the image and proceed sequentially until the proposal is ready for T8-B.
