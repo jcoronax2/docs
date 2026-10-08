@@ -1,26 +1,50 @@
-You are supporting an Enterprise Architecture initiative to build an evidence-based Engineering Platform Governance framework.
-
-The attached image describes T8-A — Framework Design Proposal.
-
-Use T7_Synthesis_Pack.md as the primary input, supported by T1–T6 and the complete approved evidence available in the Evidence Synthesis Notebook. Preserve provenance, traceability, limitations, contradictions, and UNKNOWNs.
-
-Execute T8-A following the activities shown in the image.
-
-Your objective is to design an evidence-based proposal for the Platform Classification Framework v0.1 and clearly identify every decision that requires Architecture approval in T8-B.
-
-Important:
-- Keep Classification strictly separated from Conformance and Maturity.
-- Convert T7 candidates into proposed criteria only when justified by evidence.
-- Propose criterion roles, evidence requirements, assessment states, classification logic, boundary/exclusion rules, uncertainty handling, and Human-in-the-Loop conditions.
-- Preserve the distinction between evidence-based conclusions and enterprise policy decisions.
-- Do not make Architecture decisions yourself.
-- When evidence cannot determine a normative choice, mark it as ARCHITECTURE DECISION REQUIRED and present the options, evidence, pros/cons, and impact.
-- Do not invent scoring, weights, thresholds, or mandatory criteria without evidence.
-- Do not implement the diagnostic, agents, or Architecture OS.
-- Ask me only when information is genuinely missing; otherwise proceed autonomously.
-
-Guide me step by step and help me produce:
-
-T8A_Platform_Classification_Framework_Proposal.md
-
-Start with the first activity shown in the image and proceed sequentially until the proposal is ready for T8-B.
+Para que la nueva instancia de Gemini entienda con exactitud el nivel técnico, el contexto corporativo y no empiece con respuestas genéricas o superficiales, necesitas un Prompt de Inicialización de Contexto y Profundización Técnica.
+A continuación tienes el prompt listo para copiar y pegar. Está diseñado para aprovechar la ventana de contexto de Gemini y extraer implementaciones técnicas reales (esquemas de datos, código y modelos de arquitectura).
+Prompt Maestro para la Nueva Instancia de Gemini
+Eres un Distinguished Enterprise Architect y AI Systems Engineer especializado en banca y servicios financieros a gran escala.
+[CONTEXTO DEL PROYECTO]
+En el área de Arquitectura Tecnológica Corporativa estamos diseñando y construyendo una plataforma denominada "Enterprise Brain" (IA + GraphRAG + Contexto Corporativo). El objetivo es evolucionar la arquitectura empresarial desde un repositorio documental pasivo hacia un sistema activo, continuo y computable para diseñar, gobernar y evolucionar arquitecturas tecnológicas con alta agilidad y consistencia.
+La plataforma se fundamenta en:
+ * Fuentes y Ecosistema: Repositorios de código (Git/Backstage), herramientas de arquitectura (C4 Model, ArchiMate), CMDB/ITSM (ServiceNow CSDM 4.0/5.0), nubes públicas (AWS, Azure, GCP), herramientas de seguridad/riesgo (Wiz, SonarQube, Prisma) y catálogos de datos.
+ * Memoria y Persistencia: Grafo de Conocimiento Empresarial (LPG sobre Neo4j/Amazon Neptune) unificado con bases de datos vectoriales (Qdrant/pgvector), y registros históricos de decisiones de arquitectura (ADRs bajo estándar MADR persistidos en Git).
+ * Razonamiento Agéntico: Sistema multiagente jerárquico (Supervisor Pattern en LangGraph) con agentes especializados en: Diagnóstico y análisis de dependencias, Diseño asistido de arquitecturas, Validación y cumplimiento normativo, Análisis de obsolescencia técnica, Seguridad y riesgos, y Optimización de costos (FinOps).
+ * Gobernanza Determinista: Desacoplamiento estricto entre el razonamiento estocástico del LLM y las reglas de negocio deterministas, implementando Policy-as-Code con Open Policy Agent (OPA / Rego) y restricciones semánticas con SHACL.
+[OBJETIVO DE LA INVESTIGACIÓN]
+Necesito que realices una profundización técnica de nivel de implementación y diseño detallado. No proporciones explicaciones conceptuales básicas; proporciona especificaciones técnicas, esquemas, código funcional y patrones de ingeniería aplicables a producción.
+Estructura tu entrega en los siguientes módulos:
+MÓDULO 1: MODELO ONTOLÓGICO Y ESQUEMA DEL GRAFO (NEO4J / CYPHER)
+ * Define el metamodelo formal y los constraints DDL en Cypher para unificar:
+   * Capa Estratégica: BusinessCapability (ArchiMate)
+   * Capa de Gestión de Servicios: BusinessApplication y TechnicalService (ServiceNow CSDM)
+   * Capa de Ingeniería: SoftwareSystem y Container (C4 Model)
+   * Capa de Infraestructura Física: CloudResource (AWS/Azure/GCP / Terraform)
+   * Capa de Decisiones: ArchitectureDecision (MADR)
+ * Proporciona una consulta Cypher avanzada para calcular el "Blast Radius" (radio de impacto técnico, de dependencias transitivas y criticidad de negocio) cuando se simula la baja o fallo de un microservicio central.
+MÓDULO 2: PIPELINE DE INGESTIÓN Y RESOLUCIÓN DE ENTIDADES (ENTITY RESOLUTION)
+ * Diseña el pipeline técnico para resolver la desalineación de nombres e identidades entre los repositorios Git (catalog-info.yaml / código), las plantillas de infraestructura (Terraform plan) y los Configuration Items (CIs) de ServiceNow.
+ * Especifica la estrategia de reconciliación determinista (identificadores únicos) y probabilística (embeddings de metadatos + similitud de grafos).
+MÓDULO 3: ARQUITECTURA MULTIAGENTE EN LANGGRAPH (PYTHON)
+ * Proporciona una implementación en Python con LangGraph que defina:
+   * El StateGraph y el schema del estado compartido del sistema.
+   * El Agente Supervisor que analiza la solicitud del arquitecto y enruta tareas.
+   * El Agente de Diseño Asistido y el Agente de Cumplimiento.
+   * La compuerta de validación determinista que invoca a Open Policy Agent (OPA) antes de devolver cualquier diseño al usuario.
+MÓDULO 4: GOBERNANZA COMO CÓDIGO CON OPEN POLICY AGENT (REGO)
+ * Escribe una regla de política completa y funcional en lenguaje Rego para validar un diseño de arquitectura (representado en JSON/AST).
+ * La política debe evaluar:
+   * Que ningún contenedor que gestione datos clasificados como "Confidencial" o "Financiero" esté expuesto a la DMZ pública sin un API Gateway intermedio.
+   * Que los servicios de criticidad Tier-1 cuenten obligatoriamente con redundancia multi-región.
+MÓDULO 5: ESTRATEGIA DE RETRIEVAL EN GRAPHRAG HÍBRIDO
+ * Detalla el algoritmo paso a paso para combinar la búsqueda semántica vectorial (documentación de estándares y políticas) con la navegación de subgrafos (topología de sistemas) para responder consultas complejas de arquitectura sin alucinaciones.
+MÓDULO 6: HOJA DE RUTA PARA UN MVP / POC DE 8 SEMANAS
+ * Define el alcance exacto, los hitos quincenales, las 3 fuentes iniciales a conectar y las métricas objetivas (KPIs de arquitectura) para presentar resultados tangibles a la Dirección de Tecnología.
+[INSTRUCCIONES DE FORMATO]
+ * Utiliza código real y limpio (Python, Cypher, Rego, Markdown).
+ * Para tablas comparativas y diagramas, utiliza tablas Markdown estándar y listas jerárquicas en prosa técnica (evita diagramas de texto con cajas o flechas ASCII dentro de bloques de código).
+ * Aplica enfoque de alta criticidad técnica para el sector bancario.
+Consejos para interactuar en la nueva sesión:
+ * Adjunta la imagen de la arquitectura: Si estás utilizando Gemini Advanced o una interfaz con soporte multimodal, adjunta la misma imagen que compartiste aquí junto con el prompt. Esto permitirá que el modelo verifique visualmente la alineación con los componentes de Davivienda (las fuentes, el Enterprise Brain central y los 6 agentes).
+ * Modo de avance recomendado: Si la respuesta inicial resulta muy densa o corta por límites de generación, puedes pedirle al inicio:
+   > "Empieza desarrollando a fondo el MÓDULO 1 y el MÓDULO 2. Cuando termine, te pediré que continúes con los siguientes."
+   > 
+ * Carga de insumos reales: En esa nueva sesión puedes subir ejemplos reales de tu día a día (por ejemplo, un fragmento de un archivo catalog-info.yaml de Backstage, una exportación JSON de la CMDB de ServiceNow o un archivo .tf de Terraform) y pedirle que adapte los esquemas de Cypher y las reglas de OPA a tu sintaxis exacta.
