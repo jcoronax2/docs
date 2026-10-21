@@ -1,348 +1,52 @@
 ## Persona
-Eres un arquitecto de software senior (15+ años) en banca regulada colombiana, con experiencia en arquitectura empresarial (TOGAF, modelos de arquitectura en grafo), validación de modelos de datos en grafo y desarrollo en Node.js sin dependencias. Eres literal y verificable: construyes exactamente lo especificado, no inventas datos ni "mejoras" el diseño, y si algo es ambiguo eliges la lectura más simple y lo anotas en `NOTAS.md`. Nunca declaras que algo pasa sin haberlo ejecutado.
+Eres un desarrollador front-end senior especializado en visualización de datos para presentaciones ejecutivas: HTML, CSS y JavaScript sin dependencias, animación SVG, rendimiento y legibilidad en proyector. Eres literal: construyes exactamente lo especificado, no agregas funciones, y nunca declaras que algo funciona sin haberlo ejecutado o verificado.
 
 ## Tarea
-Genera en la carpeta actual el repositorio `metamodelo/` de un metamodelo de arquitectura empresarial para el ficticio "Banco Ejemplo": esquema, catálogos, validador, reglas de consistencia, pruebas y diagramas. Todo en español.
+Dentro del repositorio `metamodelo/` ya existente (resultado del prompt 1; `node validar.js` pasa) crea la carpeta `demo/` con una demostración interactiva para presentar a un director: UN solo archivo `demo/metamodelo-demo.html` (CSS, JS y datos incrustados; sin internet, sin CDN, sin imágenes externas, sin frameworks) que se abre con doble clic.
 
 Pasos:
-0. Ejecuta `node --version`. Si falla, no escribas scripts: ve al paso 8B.
-1. Crea `metamodelo.json` desde <metamodelo> (6 workspaces, 23 tipos de componente, 27 tipos de referencia, 65 triples, listas, campos globales, propagación de impacto, `modo_restricciones: "estricto"`). Cada referencia lleva frase e inversa.
-2. Crea `catalogos/<workspace>.json` desde <catalogo>, con la forma `{"workspace": "...", "componentes": [{"id","tipo","nombre","padre"?,"campos":{},"referencias":[{"tipo","destino","campos"?}]}]}`. Las referencias son SOLO salientes (el componente es el origen). Copia los datos tal cual, sin añadir ni quitar componentes ni referencias.
-3. Crea `ejemplos-error/aplicaciones.json` desde <errores>. Se valida SUMADO a `catalogos/`, no en lugar de él.
-4. Crea `reglas-consistencia.json` (por cada regla de <reglas_grf>: id, descripcion y severidad, editables) y `reglas.js`, módulo que exporta `evaluar(grafo)` con la lógica de las 14 reglas bajo el mismo ID y la severidad leída del JSON. `evaluar` devuelve `{fecha_corte, color, total, hallazgos}` con los hallazgos sin duplicados y ordenados por componente, mensaje, regla y severidad. Un ID inexistente o un campo ausente nunca lanza excepción: simplemente no produce hallazgo.
-5. Crea `validar.js` (Node, solo `fs` y `path`; importa `reglas.js`) según <validador>. Al correr sin opciones también imprime la sección "Consistencia del grafo (GRF-001..014)" y escribe `salida/consistencia.json`.
-6. Crea `pruebas.js` (`node:assert`) con un grafo limpio (VERDE) en memoria y casos de una sola mutación: al menos un caso positivo por cada regla GRF-001..014 y estos negativos: tier-3 sin RTO, API interna sin regla SEG, dato público sin SEG-002, waiver vigente sobre TEC-001, sucesora presente, dependencia no crítica, arquetipo en borrador (no es deprecado), RTO igual al base, waiver vigente sobre arquetipo (suspende 012, 013 y 014) y waiver vencido (no suspende). Total esperado: 32 casos.
-7. Crea `probar.js` (Node, sin bash, usa `child_process`) que ejecute `node validar.js`, `node validar.js ejemplos-error`, `node pruebas.js` y las consultas de <esperado>, guarde la evidencia en `salida/01-build.txt`, `02-errores.txt`, `03-pruebas.txt`, verifique cada resultado esperado con `node:assert` y termine con código 1 si alguno falla.
-8A. Ejecuta todo y corrige hasta que <esperado> se cumpla completo. 8B. Si no hay Node: revisa los catálogos a mano y escribe `salida/reporte.md` con errores y hallazgos GRF-001..014.
+0. Ejecuta `node validar.js --fecha 2026-10-21` para tener `salida/grafo.json` y `salida/consistencia.json`.
+1. `demo/motor.js`: función pura `impacto(grafo, mm, origen)` y `contexto(grafo, app)`, según <motor>. Escrita en JS clásico (sin `?.`, `??`, `||=`) y exportada como `window.Motor` en el navegador o `module.exports` en Node.
+2. `demo/probar-motor.js`: para CADA componente del grafo ejecuta `node validar.js --fecha 2026-10-21 --impacto ID`, lee de la tabla los componentes y su estado (caido o degradado) y comprueba con `node:assert` que `Motor.impacto` da exactamente el mismo conjunto y los mismos estados (sin contar el origen). Comprueba también `contexto(grafo,'APP-006')` según <esperado>.
+3. `demo/plantilla.html` con los marcadores `/*@@MOTOR@@*/` (contenido de motor.js) y `/*@@DATOS@@*/` (objeto JSON), y `demo/construir.js` que ejecuta validar.js, arma `DATOS` y escribe `metamodelo-demo.html`. Reemplaza los marcadores con una función (no con cadena) y escapa `</script`. `DATOS` = `{mm, grafo, consistencia, reglas}`: `mm` con workspaces, propagacion_impacto, tipos_componente (workspace, padres, origen, campos obligatorios) y tipos_referencia (frase, triples con salida/entrada); `grafo` = salida/grafo.json; `consistencia` = salida/consistencia.json; `reglas` = id y descripcion de reglas-consistencia.json.
+4. Verifica: `node probar-motor.js`; sintaxis de los scripts del HTML; y, si hay Chrome o Edge, capturas headless (`--force-prefers-reduced-motion --window-size=1920,1080 --virtual-time-budget=9000`) de cada acto con las URL de <diseno>. Revisa visualmente que no haya textos pisados ni elementos fuera de margen.
+5. `demo/README.md` breve: teclas, cómo regenerar, qué cifras reemplazar.
 
-DEBE: usar solo módulos nativos de Node; fecha de corte = campo `generado` del grafo (parámetro `--fecha`, por defecto la de hoy; en pruebas fija 2026-10-21), nunca el reloj dentro de las reglas; terminar con código 1 y sin escribir `grafo.json` si hay errores. Los errores de ejemplos-error se imprimen con la ruta del archivo JSON. NO DEBE: instalar nada, usar internet, usar datos reales, ni modificar los datos de <catalogo>.
+DEBE: respetar <diseno> y <esperado>; funcionar offline; respetar `prefers-reduced-motion`; dejar un valor final garantizado en los contadores animados (temporizador además de requestAnimationFrame; una bandera evita que un fotograma tardío lo pise). NO DEBE: usar librerías, fuentes o imágenes externas, ni inventar datos distintos de los del grafo.
 
 ## Contexto
-Es un ejemplo didáctico para que Arquitectura Empresarial pruebe un metamodelo versionado en Git, con el catálogo como fuente de verdad y reglas de consistencia que cambian sin tocar código. El entorno de ejecución solo tiene Node.js (sin Python, OPA ni internet); las reglas van como JSON declarativo en lugar de Rego. Los únicos nombres reales son las normas públicas (SFC CE 007/2018, CE 005/2019, Ley 1581 de 2012). Fuera de alcance: interfaz gráfica, encuestas, escenarios, Gremlin, instalar paquetes, generar PNG (solo `.mmd`).
+Se presentará a la dirección y a todo el equipo, con proyector. Objetivo: que entienda sin dudas cómo funciona el metamodelo, qué se estructuró y diseñó, y qué valor da al banco. Debe impresionar y poder recorrerse sin que nadie pelee con la herramienta en vivo. Los datos son ficticios ("Banco Ejemplo").
 
-<validador>
-CLI de validar.js: sin argumentos = valida + escribe `salida/grafo.json` (`{generado, modo_restricciones, componentes:{id:{id,tipo,workspace,nombre,padre,campos}}, referencias:[{tipo,origen,destino,campos}]}`), `salida/reporte.md` y los `.mmd`, evalúa las reglas GRF y ejecuta 3 consultas de ejemplo (impacto de PLT-002, datos sensibles en APIs expuestas, contexto de SOL-001). Opciones: `<carpeta>` (catálogos adicionales que se suman a catalogos/), `--modo guiado|estricto`, `--fecha AAAA-MM-DD`, `--impacto ID`, `--contexto SOL-ID`, `--arquetipo ARQ-ID`.
-Salida de errores: `ERROR E0xx ID: mensaje [archivo]`; resumen "Validación (estricto): N errores y M advertencias en K componentes".
-Códigos:
-- E001 workspace del archivo inexistente, o el tipo no vive en ese workspace. E002 tipo de componente inexistente. E003 ID con formato distinto de PREFIJO-NNN (tres dígitos, prefijos del tipo) o duplicado.
-- E004 campo obligatorio ausente (incluye `nombre`). E005 tipo de dato o rango (min/max) incorrecto. E006 valor fuera de la lista cerrada. E007 campo que no existe en el metamodelo (ni global). E008 campo obligatorio condicional (`requerido_si`) ausente. E004-E008 se aplican igual a los campos de las referencias.
-- E009 jerarquía: tipo sin padres permitidos que trae padre; tipo con padres y no raíz sin padre; padre inexistente, de tipo no permitido o de otro workspace (un solo error por componente: reporta la primera causa); ciclo; profundidad > nivel_max; campo `nivel` distinto de la profundidad (raíz = 1).
-- E010 tipo de referencia inexistente. E011 destino inexistente. E012 triple (tipoOrigen, referencia, tipoDestino) no definido: error en modo estricto, advertencia W012 en guiado. E016 referencia duplicada (mismo tipo y destino).
-- E014 cardinalidad por origen (`salida`) y `salida_total`; E015 cardinalidad por destino (`entrada`). Por origen: para cada componente del tipo origen del triple, cuenta sus referencias de ese tipo cuyo destino sea del tipo destino del triple. Por destino: para cada componente del tipo destino, cuenta las referencias entrantes de ese tipo cuyo origen sea del tipo origen del triple. `salida_total` cuenta todas las salientes de esa referencia.
-- Si una referencia tiene destino inexistente (E011) no se evalúan triple ni cardinalidad para ella.
-Impacto (`--impacto ID`): estado por componente, caído > degradado; el origen cae. Se itera hasta que nada cambie: (a) para es_soportado_por, se_conecta_a y usa, si el destino está caído el origen cae, salvo que la referencia traiga `critica:false` (campo de se_conecta_a), en cuyo caso el origen solo queda degradado; si el destino está degradado el origen queda degradado; (b) es_realizada_por: el origen cae solo si TODOS sus realizadores están caídos, degradado si alguno está afectado; (c) jerarquía: un Plataforma, Aplicacion o ModuloAplicacion caído hace caer a todos sus hijos; un hijo afectado deja al padre degradado y, si todos los hijos están caídos, el padre cae. Salida: "Si cae X: alcanza N componentes: A aplicaciones y C capacidades." (N excluye el origen) y tabla Tipo | Componente | Estado | Criticidad | Por qué (camino causal).
-Contexto (`--contexto SOL-ID`): por cada aplicación evaluada, 5 líneas: Aplicación (id nombre · tier · fase · RTO/RPO · dueño); Capacidad (las que la realizan) · Corre en (entornos de la app y sus módulos, con "nube pública" u "on-premise" según la plataforma padre); Datos (entidades que almacenan las bases de datos que la app o sus módulos usan, con [clasificación]) · Depende de (aplicaciones dueñas de las APIs a las que la app o sus módulos se conectan; "(no crítica)" si critica:false); Regulación declarada · inferida (nube pública → SFC-CE-005-2019; datos personales → LEY-1581-2012) → "falta declarar X" o "completa"; ADR (id y estado) · Waivers.
-Arquetipo (`--arquetipo ARQ-ID`): cabecera del arquetipo y tabla Implementado por | Aplicación | Tier | RTO/RPO | Desviaciones | Waiver. Desviaciones: "arquetipo deprecado (GRF-013)"; "tier-X supera tier-Y; RTO a < base b; RPO a < base b (GRF-014)" usando los niveles de la APLICACIÓN dueña; "despliega en PLT-00X fuera del arquetipo" (plataforma del entorno que no está en se_despliega_en); "usa TPR-00X nombre fuera del stack" (producto de es_soportado_por que el arquetipo no usa); si no hay: "ninguna desviación → VERDE casi automático". Waiver: "WVR-00X → regla" de los otorgados a la aplicación.
-Datos sensibles en APIs expuestas: por cada API con expuesta_a distinto de interna: expuesta a, gateway, auth, datos provistos con (clasificación), reglas a las que está sujeta, alerta "sin regla SEG" o "ok".
-Mermaid (`salida/*.mmd`): `flowchart TB`, sin subgrafos; cada tipo es un nodo coloreado por workspace con `classDef` (organizacion #e9d8fd, negocio #c6f6d5, aplicaciones #bee3f8, datos #fefcbf, tecnologia #fed7aa, gobierno #fecaca); una flecha por par (origen, destino) con las referencias unidas por " / "; jerarquía padre-hijo como línea punteada `-.-`. Vistas: metamodelo, metamodelo-nucleo, vista-estructura, vista-gobierno, vista-organizacion, vista-arquetipos (esta última: las referencias que entran o salen de Arquetipo).
-</validador>
+<motor>
+Entrada: grafo `{componentes:{id:{id,tipo,padre?,campos,nombre,workspace}}, referencias:[{tipo,origen,destino,campos}]}` y `mm.propagacion_impacto = {dependencias:{referencias:[es_soportado_por,se_conecta_a,usa], campo_atenuante:"critica"}, realizacion:{referencias:[es_realizada_por]}, jerarquia:{arrastran_hijos:[Plataforma,Aplicacion,ModuloAplicacion], hijo_afecta_padre:true}}`.
+impacto devuelve `{estado:{id:"caido"|"degradado"}, ronda:{id:n}, causa:{id:{via,rel}}}`. El origen: caido, ronda 0, rel "origen". Rondas SÍNCRONAS: en la ronda n solo se mira el estado al final de la ronda n-1 (copia) y, si un componente recibe varias propuestas, gana la de mayor gravedad (caido > degradado) y, a igualdad, la primera. Nunca se rebaja un estado. Termina cuando una ronda no cambia nada. Reglas por ronda:
+(a) para cada referencia de las de dependencias cuyo destino está afectado: el origen queda igual de grave que el destino, salvo que la referencia tenga `campos.critica === false`, caso en que queda degradado; rel = tipo de la referencia.
+(b) para cada componente con referencias es_realizada_por: sean R sus destinos y A los afectados; si hay A: caido solo si todos los de R están caidos, si no degradado; via = primer afectado; rel "es_realizada_por".
+(c) jerarquía: si un padre de tipo en arrastran_hijos está caido, todos sus hijos quedan caidos (rel "hijo_de", via = padre); si algún hijo está afectado, el padre queda degradado y caido si TODOS sus hijos están caidos (rel "tiene_hijo", via = primer hijo afectado).
+contexto(grafo, app) devuelve: duenos (Persona con es_dueno_de hacia la app), capacidades (CapacidadNegocio con es_realizada_por hacia la app), entornos (Entornos a los que es_soportado_por la app o sus hijos, sin repetir, con `nube` = su Plataforma padre es nube_publica), datos (EntidadDatos que almacenan las BaseDatos usadas por la app o sus hijos, ordenadas), dependencias (aplicación dueña de cada API a la que se_conecta_a la app o sus hijos, distinta de la app, `critica` salvo critica:false), declarada (regulacion), faltan (SFC-CE-005-2019 si corre en nube pública; LEY-1581-2012 si algún dato tiene datos_personales; menos las declaradas; ordenado), adrs (ADR con decide_sobre a la app), waivers (Waiver con se_otorga_a la app).
+</motor>
 
-<reglas_grf>
-Color: alguna severidad alta → ROJO; si no, algún hallazgo → AMARILLO; ninguno → VERDE. Salida: color, total y lista {regla, severidad, componente, mensaje}. "Crítica" = tier-1 o tier-2 y no retirada. "App de X" = X si es Aplicacion, si no su ancestro Aplicacion. Un waiver está "vigente" si su `vence` >= `generado`. Un waiver "exceptúa" algo si tiene referencia exceptua hacia ello y se_otorga_a la aplicación.
-GRF-001 alta: toda crítica declara rto_min y rpo_min.
-GRF-002 alta: toda crítica tiene exactamente un dueño (es_dueno_de entrante).
-GRF-003 media: toda crítica en producción tiene un ADR con estado aceptado que decide_sobre ella.
-GRF-004 alta: toda API con expuesta_a canales o terceros está esta_sujeta_a al menos una regla cuyo ID empieza por SEG-.
-GRF-005 media: toda API a terceros que provee datos confidenciales o restringidos está sujeta a SEG-002.
-GRF-006 alta: Aplicacion o ModuloAplicacion que es_soportado_por un producto obsoleto o prohibido sin waiver vigente que exceptúe TEC-001 otorgado a su aplicación.
-GRF-007 media: aplicación que corre en nube pública (entornos de ella o de sus hijos cuyo padre Plataforma es nube_publica) y no declara SFC-CE-005-2019 en regulacion.
-GRF-008 media: time = migrar sin es_reemplazada_por.
-GRF-009 alta: referencia se_conecta_a o usa hacia un componente de una aplicación retirada, desde un origen cuya aplicación no esté retirada.
-GRF-010 media: una crítica con rto_min menor que el rto_min de la aplicación de una API a la que ella o sus hijos se conectan con critica distinto de false (excluida ella misma).
-GRF-011 baja: waiver con vence < generado.
-GRF-012 media: aplicación en_implementacion donde ni ella ni sus hijos implementan un arquetipo con estado aprobado, y sin waiver vigente que exceptúe cualquier arquetipo.
-GRF-013 alta: Aplicacion o ModuloAplicacion que implementa un arquetipo deprecado, salvo waiver vigente que exceptúe ese arquetipo a su aplicación.
-GRF-014 alta: quien implementa un arquetipo (salvo waiver vigente sobre ese arquetipo) con una aplicación cuyo tier es MÁS crítico que criticidad_maxima_soportada (tier-1 supera tier-2), o rto_min < rto_base_min, o rpo_min < rpo_base_min. Un solo hallazgo por implementador, con los motivos unidos por "; ".
-</reglas_grf>
+<diseno>
+Escenario fijo de 1920x1080 escalado con transform para caber en la ventana (centrado, fondo blanco). Tema BLANCO con rojo institucional: rojo #DA0F1F, rojo oscuro #9F0A16, rojo claro #FDECEE, tinta #1C1C1E, gris #6B7280, líneas #E3E4E8, ámbar #F5A524, verde #1E9E5A. Tipografía del sistema (Segoe UI, Helvetica Neue, Arial). Banda roja de 12 px arriba; cabecera con marca "Metamodelo de arquitectura · Banco Ejemplo" y puntos de progreso clicables (el activo es una píldora roja); pie "Datos ficticios · Banco Ejemplo" y "← → navegar · F pantalla completa · N notas". NO usar logos ni nombres de entidades reales.
+Navegación: ← → Espacio RePág AvPág Inicio Fin, F (pantalla completa), N (panel oscuro de notas del presentador abajo), R (repetir acto), 1 a 6 (ir al acto). Transición de 0,5 s (fundido y desplazamiento de 40 px). URL: `#3` abre el acto 3 (1 a 6); `#4:PLT-002` simula esa caída; `#4:cmp` abre la comparación; `#5:banco` abre el estado de todo el banco.
+Actos (índice 1 a 6):
+1 Portada: etiqueta "ARQUITECTURA EMPRESARIAL", título "El mapa vivo / de cómo se conecta / el banco" (la palabra "conecta" en rojo), subtítulo "Aplicaciones, datos, tecnología, riesgo y regulación en un solo modelo que se puede consultar, validar y simular.", pie "Equipo de Arquitectura Empresarial · Datos ficticios de “Banco Ejemplo”". A la derecha un grafo decorativo SVG de 15 nodos rojos y rosados que laten.
+2 "1 · El problema": título "Hoy la arquitectura vive dispersa" (dispersa en rojo); dos tarjetas. "Hoy" (✕ gris): Inventarios en Excel y presentaciones desactualizadas / Cada solicitud al ARB se revisa leyendo documentos / Las reglas se aplican de memoria / El impacto de una caída se descubre durante el incidente. "Con el metamodelo" (✓ rojo, fondo rojo claro): "Un solo grafo: 71 componentes y 142 relaciones" (cifras leídas del grafo) / Cada hecho tiene un ID que se puede citar / 14 reglas automáticas con semáforo / El impacto de una caída se calcula en segundos. Los ítems aparecen escalonados (450 ms). Franja final "Preparar una revisión del ARB: ~3 días → minutos" con la nota "cifras ilustrativas"; las cifras viven en una constante `CIFRAS_ILUSTRATIVAS` fácil de editar.
+3 "2 · Qué estructuramos": título "Un lenguaje común para todo el banco"; 4 contadores animados (áreas, tipos de componente, tipos de relación, conexiones permitidas: se calculan del mm: 6, 23, 27, 65). Rejilla 3x2 de tarjetas por área con chips por tipo (nombres amigables: Capacidad de negocio, Módulo de aplicación, Unidad organizacional, etc.); subtítulos: Organización "Quién es quién", Negocio "Qué hace el banco", Aplicaciones "Qué sistemas lo soportan", Datos "Qué información maneja", Tecnología "Dónde y cómo corre", Gobierno "Reglas, decisiones y riesgo". Al elegir un chip (por defecto Aplicación) un panel a la derecha muestra: nombre, etiqueta del área, etiqueta "Concepto de referencia" si su `origen` empieza por "[Referencia]" o "Diseño propio", "Hijo de: …", las 7 primeras relaciones como frases (la frase del tipo de referencia con {o} y {d} reemplazados por los nombres amigables; primero las salientes) con su cardinalidad ("exactamente 1", "mín. 1", "máx. 1"), "y N conexiones más…" y los datos obligatorios. Dos botones: "✓ Conexión permitida" (caja verde: Capacidad de negocio es realizada por Aplicación está definido) y "✕ Conexión no permitida" (caja roja con sacudida: ERROR E012 · Aplicación es realizada por Aplicación no está definido en el metamodelo).
+4 "3 · Mapa vivo" (el momento estelar): fila de controles con "¿Qué pasa si cae…?", botones AWS (PLT-002), OpenShift (PLT-001), GCP (PLT-003), Comparar, Reiniciar, y a la derecha tres marcadores grandes rojos: componentes, aplicaciones, capacidades afectados (excluye el origen). SVG viewBox 1500x740 (ancho 1700 px en pantalla) con tres bandas redondeadas (negocio fondo #FDF3F4; aplicaciones y tecnología #F4F5F7) y rótulos verticales NEGOCIO, APLICACIONES, TECNOLOGÍA. 37 nodos (rect redondeado 128x44; arriba el ID en negrita y abajo el nombre truncado a 18 caracteres + "…"; el título del nodo con el nombre completo) en estas posiciones (centro x, borde superior y): CAP-100 400,18; CAP-200 800,18; CAP-300 1240,18; PRC-002 240,98; CAP-110 400,98; PRC-001 560,98; CAP-210 720,98; CAP-220 880,98; CAP-310 1240,98; APP-001 150,205; APP-004 310,205; APP-002 560,205; APP-003 840,205; APP-005 1040,205; APP-006 1240,205; MOD-001 150,290; MOD-003 310,290; MOD-002 500,290; MOD-006 650,290; MOD-004 800,290; MOD-005 950,290; IFZ-001 1360,290; API-004 310,375; API-001 500,375; API-003 800,375; API-002 950,375; BDD-002 500,485; BDD-001 650,485; TPR-001 800,485; TPR-002 950,485; BDD-003 1240,485; ENT-002 230,565; ENT-001 720,565; ENT-003 1240,565; PLT-002 230,645; PLT-001 720,645; PLT-003 1240,645. Aristas (curvas Bézier verticales, gris tenue, opacidad .28) para cada referencia es_soportado_por, se_conecta_a, usa y es_realizada_por entre nodos mostrados, y para la jerarquía padre-hijo (punteada); una sola arista por par; si ambos están en la misma fila, un arco por encima. Al simular una caída: los no afectados se atenúan; cada ronda aparece cada 750 ms; los nodos pasan a rojo (caído) o ámbar (degradado) con un pulso de 0,7 s; el origen en rojo oscuro con borde negro; la arista causal de cada nodo (hacia `causa.via`) se resalta en rojo grueso con resplandor; los marcadores cuentan a medida que avanzan las rondas. Clic en un componente afectado (no origen) abre una tarjeta "¿Por qué cae?" con la cadena causal en frases ("X depende de / se conecta a / usa / es realizada por / es parte de / contiene a Y"); clic en cualquier otro componente simula su caída. "Comparar" abre un panel con barras animadas para AWS, OpenShift y GCP (componentes afectados) y la frase "Si cae OpenShift se ven afectadas 7 de las 7 capacidades de negocio (AWS: 4). Eso es concentración de riesgo, y hoy no se ve hasta que ocurre." (cifras calculadas). Leyenda: caído, degradado, sin afectación.
+5 "4 · El valor para el ARB": título "La solicitud llega con los hechos y un semáforo". Izquierda, tarjeta de SOL-001 con los hechos de `contexto(APP-006)` (aplicación, tier y fase en español: "en implementación"; RTO/RPO y dueño; capacidad; corre en "(nube pública)"; datos con [clasificación]; depende de "(no crítica)"; regulación declarada y, en rojo, "Falta declarar SFC-CE-005-2019"; ADR con su estado; excepciones). Derecha, las 14 reglas (id y descripción de `reglas`) que se encienden una a una (300 ms), ✓ verde o ✕ rojo con el mensaje; fallan solo las que tienen hallazgo en APP-006 o sus hijos según `consistencia`; al final un semáforo grande: AMARILLO con "2 hallazgos". Botón "Ver el estado de todo el banco": panel con color ROJO, 6 hallazgos, fecha de corte y la tabla (regla, severidad alta/media, componente, mensaje) de `consistencia`; botón "Volver a la solicitud".
+6 Cierre: etiqueta "LO QUE LOGRAMOS"; frase grande con barra roja "Decidimos y gobernamos con hechos conectados, no con supuestos." (constante `FRASE_CIERRE`); tres cifras grandes animadas (71 componentes conectados, 142 relaciones con significado, 14 reglas que se evalúan solas); tres tarjetas rojo claro: "Decisiones más rápidas" (El ARB recibe hechos con ID citables y un semáforo, no documentos para leer.), "Riesgo a la vista" (Concentración de riesgo y dependencias visibles antes del incidente, no durante.), "Cumplimiento trazable" (SFC CE 007/2018, CE 005/2019 y Ley 1581 conectadas a las aplicaciones que les aplican.); y "Siguiente paso propuesto: piloto con un dominio de 20 a 30 aplicaciones reales, ajustando listas y escalas a las del banco."
+Notas del presentador: un párrafo corto por acto (qué decir y qué botón tocar; advertir que las cifras del acto 1 son ilustrativas).
+</diseno>
 
 <esperado>
-- `node validar.js`: 0 errores, 0 advertencias, 71 componentes, 142 referencias, 24 relaciones padre-hijo.
-- `node validar.js ejemplos-error`: exactamente 14 errores, código de salida 1, sin grafo.json.
-- Reglas sobre el catálogo (fecha 2026-10-21): ROJO, 6 hallazgos: GRF-003 APP-003; GRF-004 API-004; GRF-007 APP-006; GRF-012 APP-006; GRF-013 MOD-005; GRF-014 MOD-006 (RPO 0 < base 60; RTO 30 < base 480; tier-1 supera tier-2).
-- `--impacto PLT-002`: alcanza 12 componentes, 2 aplicaciones (APP-001, APP-004) y 4 capacidades (CAP-100, 110, 200 degradadas; CAP-210 caída).
-- `--impacto ENT-001`: alcanza 28 componentes, 6 aplicaciones, 7 capacidades.
-- `--contexto SOL-001`: APP-006 tier-2, en_implementacion, RTO 240 / RPO 15, dueño PER-002; corre en ENT-003 (nube pública); regulación declarada LEY-1581-2012, inferida + SFC-CE-005-2019 → falta declarar SFC-CE-005-2019; ADR-004 (propuesto); sin waivers.
-- `--arquetipo ARQ-001`: MOD-002 sin desviaciones. `ARQ-002`: APP-005 (usa TPR-002 Java 8 fuera del stack, waiver WVR-001 → TEC-001) y MOD-006 (GRF-014). `ARQ-003`: MOD-005 (deprecado, GRF-013).
-- Datos sensibles en APIs expuestas: API-001 ok, API-002 ok, API-004 "sin regla SEG".
-- `node pruebas.js`: 32 casos, todos pasan.
+- `node probar-motor.js`: el motor coincide con validar.js en los 71 componentes y el contexto de APP-006 es: dueño PER-002, capacidad CAP-310, entorno ENT-003 con nube true, dato DAT-004, depende de APP-003 con critica false, falta SFC-CE-005-2019, ADR-004, sin waivers.
+- Caída de PLT-002 (AWS): 12 componentes, 2 aplicaciones, 4 capacidades. PLT-001 (OpenShift): 28, 6 y 7. PLT-003 (GCP): 6 componentes.
+- Contadores del acto 3: 6, 23, 27 y 65. Cierre: 71, 142 y 14. Acto 5: AMARILLO con 2 hallazgos (GRF-007 y GRF-012); todo el banco: ROJO con 6.
+- Sin errores en consola; ningún texto pisado ni fuera de margen en las capturas.
 </esperado>
 
-<errores>
-Archivo ejemplos-error/aplicaciones.json (workspace aplicaciones). Debe producir exactamente 14 errores:
-APP-901|Aplicacion|Aplicación con errores de campos y referencias|-|criticidad=tier-1; fase_ciclo_vida=en_implementacion; tipo_desarrollo=propio
-   usa> BDD-999
-   implementa> ARQ-999
-   se_conecta_a> API-001(tipo_solicitud=lectura), API-001(tipo_solicitud=lectura)
- → E008 rto_min, E008 rpo_min, E011 usa BDD-999, E011 implementa ARQ-999, E016 duplicada, E015 sin dueño (6)
-APP-902|Aplicacion|Aplicación con valores fuera del metamodelo|-|criticidad=tier-3; fase_ciclo_vida=produccion; tipo_desarrollo=paquete; sla=99.9
-   es_realizada_por> APP-901
- → E006 fase, E007 sla, E012 triple Aplicacion es_realizada_por Aplicacion, E015 sin dueño (4)
-MOD-1|ModuloAplicacion|modulo-huerfano|-|tipo_modulo=microservicio; fase_ciclo_vida=en_implementacion
-   es_soportado_por> ENT-001
- → E003 formato de ID, E009 sin padre (2)
-API-901|API|API con padre inválido|CAP-100|expuesta_a=canales; autenticacion=oauth2
- → E004 falta via_gateway, E009 padre CAP-100 de tipo no permitido (2)
-</errores>
-
-<metamodelo>
-LISTAS (valores cerrados):
-criticidad=tier-1,tier-2,tier-3,tier-4
-fase_ciclo_vida=en_implementacion,en_produccion,en_retiro,retirado
-time=tolerar,invertir,migrar,eliminar
-clasificacion_datos=publica,interna,confidencial,restringida
-regulacion=SFC-CE-007-2018,SFC-CE-005-2019,LEY-1581-2012,PCI-DSS
-tipo_desarrollo=propio,paquete,saas
-tipo_modulo=microservicio,batch,bff,adaptador,libreria
-tipo_interfaz=evento,archivo,mensajeria,soap
-expuesta_a=interna,canales,terceros
-autenticacion=oauth2,oidc,mtls,api_key,ninguna
-tipo_plataforma=on_premise,nube_publica,nube_privada
-tipo_entorno=produccion,dr,pruebas
-estado_estandar=aprobado,contener,obsoleto,prohibido
-estado_adr=propuesto,aceptado,reemplazado,rechazado
-estado_arquetipo=borrador,aprobado,deprecado
-estado_solicitud=recibida,en_revision,resuelta
-severidad=alta,media,baja
-categoria_regla=seguridad,nube,tecnologia,integracion
-tipo_solicitud=lectura,escritura,lectura_escritura
-rol_soporte=ejecucion,persistencia,almacenamiento,otro
-
-TIPOS DE COMPONENTE: Tipo|workspace|prefijo|padres permitidos|raiz|nivel_max|campos   (! = obligatorio; L = lista cerrada <nombre>; LM = lista múltiple)
-Organizacion|organizacion|ORG|-|si|-|pais:txt
-UnidadOrganizacional|organizacion|UO|Organizacion/UnidadOrganizacional|no|-|tipo_unidad:txt
-Persona|organizacion|PER|-|si|-|email:email!, cargo:txt
-Rol|organizacion|ROL|-|si|-|alcance:txt
-CapacidadNegocio|negocio|CAP|CapacidadNegocio|si|3|nivel:int[1..3]!, criticidad:L<criticidad>
-Proceso|negocio|PRC|Proceso|si|2|nivel:int[1..2]!
-Aplicacion|aplicaciones|APP|-|si|-|criticidad:L<criticidad>!, rto_min:int[0..](si criticidad en tier-1/tier-2), rpo_min:int[0..](si criticidad en tier-1/tier-2), fase_ciclo_vida:L<fase_ciclo_vida>!, fecha_retiro:fecha(si fase_ciclo_vida en en_retiro), time:L<time>(si fase_ciclo_vida en en_produccion/en_retiro), regulacion:LM<regulacion>, tipo_desarrollo:L<tipo_desarrollo>!, codigo_cmdb:txt
-ModuloAplicacion|aplicaciones|MOD|Aplicacion|no|-|tipo_modulo:L<tipo_modulo>!, fase_ciclo_vida:L<fase_ciclo_vida>!
-API|aplicaciones|API|Aplicacion/ModuloAplicacion|no|-|expuesta_a:L<expuesta_a>!, autenticacion:L<autenticacion>!, via_gateway:bool!, version:txt, p99_ms:int[0..]
-Interfaz|aplicaciones|IFZ|Aplicacion/ModuloAplicacion|no|-|tipo_interfaz:L<tipo_interfaz>!
-DominioDatos|datos|DOM|-|si|-|-
-EntidadDatos|datos|DAT|DominioDatos|no|-|clasificacion:L<clasificacion_datos>!, datos_personales:bool!
-Plataforma|tecnologia|PLT|-|si|-|tipo_plataforma:L<tipo_plataforma>!, proveedor:txt, region:txt(si tipo_plataforma en nube_publica)
-Entorno|tecnologia|ENT|Plataforma|no|-|tipo_entorno:L<tipo_entorno>!
-BaseDatos|tecnologia|BDD|-|si|-|motor:txt, cifrado_reposo:bool!
-ProductoTecnologico|tecnologia|TPR|-|si|-|estado_estandar:L<estado_estandar>!, version:txt
-Norma|gobierno|NOR|Norma|si|-|autoridad:txt
-Regla|gobierno|SEG/NUB/TEC/INT/RND|-|si|-|categoria:L<categoria_regla>!, enunciado:txt!
-ADR|gobierno|ADR|-|si|-|estado:L<estado_adr>!, fecha:fecha!
-Riesgo|gobierno|RSG|-|si|-|severidad:L<severidad>!
-Waiver|gobierno|WVR|-|si|-|vence:fecha!, justificacion:txt!, plan_remediacion:txt!
-SolicitudARB|gobierno|SOL|-|si|-|estado:L<estado_solicitud>!, sprint:txt
-Arquetipo|gobierno|ARQ|-|si|-|version:txt!, estado:L<estado_arquetipo>!, caso_uso:txt!, criticidad_maxima_soportada:L<criticidad>!, rto_base_min:int[0..]!, rpo_base_min:int[0..]!
-Campos globales opcionales en todo tipo (dentro de campos): descripcion:txt, fuente:txt, revisado:fecha, etiquetas:LM libre. "nombre" va en la raíz del componente y es obligatorio.
-
-TIPOS DE REFERENCIA (27) y triples (65): tipo | frase | inversa | campos de la referencia | triples Origen>Destino {salida:min-max por origen, entrada:min-max por destino} | salida_total
-pertenece_a | {o} pertenece a {d} | agrupa a | - | Persona>UnidadOrganizacional{salida:1-1} | -
-reporta_a | {o} reporta a {d} | es jefe de | - | Persona>Persona{salida:-1} | -
-es_dueno_de | {o} es dueño de {d} | tiene como dueño a | - | Persona>Aplicacion{entrada:1-1}; Persona>CapacidadNegocio; Persona>EntidadDatos{entrada:1-1}; Persona>UnidadOrganizacional; Persona>Plataforma{entrada:1-1}; Persona>Riesgo{entrada:1-1}; Persona>Arquetipo{entrada:1-1} | -
-es_experto_en | {o} es experto en {d} | tiene como experto a | - | Persona>Aplicacion; Persona>Plataforma | -
-tiene_rol | {o} tiene el rol {d} | es ejercido por | - | Persona>Rol | -
-consume | {o} consume {d} | es consumida por | - | UnidadOrganizacional>Aplicacion | -
-es_realizada_por | {o} es realizada por {d} | realiza a | - | CapacidadNegocio>Aplicacion; CapacidadNegocio>Proceso | -
-usa | {o} usa {d} | es usado por | - | Proceso>Aplicacion{salida:1-}; Arquetipo>ProductoTecnologico | -
-es_soportado_por | {o} es soportado por {d} | soporta a | rol_soporte:L<rol_soporte> | Aplicacion>Entorno; Aplicacion>BaseDatos; Aplicacion>ProductoTecnologico; ModuloAplicacion>Entorno{salida:1-}; ModuloAplicacion>BaseDatos; ModuloAplicacion>ProductoTecnologico; BaseDatos>Entorno{salida:1-2} | -
-se_conecta_a | {o} se conecta a {d} | recibe conexión de | tipo_solicitud:L<tipo_solicitud>!, critica:bool | Aplicacion>API; Aplicacion>Interfaz; ModuloAplicacion>API; ModuloAplicacion>Interfaz | -
-provee | {o} provee {d} | es provista por | - | API>EntidadDatos; Interfaz>EntidadDatos | -
-almacena | {o} almacena {d} | se almacena en | - | BaseDatos>EntidadDatos | -
-es_reemplazada_por | {o} es reemplazada por {d} | reemplaza a | - | Aplicacion>Aplicacion{salida:-1}; ProductoTecnologico>ProductoTecnologico{salida:-1} | -
-esta_sujeta_a | {o} está sujeta a {d} | aplica a | - | Aplicacion>Norma; Aplicacion>Regla; API>Regla; Plataforma>Regla; EntidadDatos>Norma | -
-deriva_de | {o} deriva de {d} | origina a | - | Regla>Norma{salida:1-}; Arquetipo>ADR{salida:1-} | -
-decide_sobre | {o} decide sobre {d} | es decidido por | - | ADR>Aplicacion; ADR>ModuloAplicacion; ADR>API; ADR>Plataforma; ADR>ProductoTecnologico | -
-reemplaza_adr | {o} reemplaza a {d} | es reemplazado por | - | ADR>ADR{salida:-1} | -
-afecta_a | {o} afecta a {d} | es afectado por | - | Riesgo>Aplicacion; Riesgo>CapacidadNegocio; Riesgo>Plataforma | -
-mitiga | {o} mitiga {d} | es mitigado por | - | Regla>Riesgo; ADR>Riesgo | -
-exceptua | {o} exceptúa {d} | es exceptuado por | - | Waiver>Regla; Waiver>Arquetipo | 1-1
-implementa | {o} implementa {d} | es implementado por | - | Aplicacion>Arquetipo{salida:-1}; ModuloAplicacion>Arquetipo{salida:-1} | -
-se_despliega_en | {o} se despliega en {d} | despliega a | - | Arquetipo>Plataforma{salida:1-} | -
-cumple | {o} cumple {d} | es cumplida por | - | Arquetipo>Regla{salida:1-} | -
-se_otorga_a | {o} se otorga a {d} | recibe a | - | Waiver>Aplicacion{salida:1-1} | -
-evalua | {o} evalúa {d} | es evaluado por | - | SolicitudARB>Aplicacion; SolicitudARB>ModuloAplicacion; SolicitudARB>API | -
-produce | {o} produce {d} | es producido por | - | SolicitudARB>ADR; SolicitudARB>Waiver | -
-aprueba | {o} aprueba {d} | es aprobado por | - | Persona>ADR; Persona>Waiver{entrada:1-} | -
-
-</metamodelo>
-
-<catalogo>
-Formato: ID|Tipo|nombre|padre|campos (clave=valor; listas separadas por coma; true/false son booleanos; números sin comillas en JSON). Debajo, las referencias salientes: `tipo> destino1, destino2`; `(clave=valor)` son campos de la referencia. Las fechas van como texto AAAA-MM-DD. Total: 71 componentes, 142 referencias, 24 con padre.
-## catalogos/organizacion.json (workspace organizacion)
-ORG-001|Organizacion|Banco Ejemplo|-|pais=Colombia; descripcion=Banco ficticio usado como ejemplo
-UO-001|UnidadOrganizacional|Vicepresidencia de Tecnología|ORG-001|tipo_unidad=vicepresidencia
-UO-002|UnidadOrganizacional|Vicepresidencia de Negocios Digitales|ORG-001|tipo_unidad=vicepresidencia
-   consume> APP-001, APP-004, APP-006
-PER-001|Persona|Ana Rojas|-|email=ana.rojas@banco-ejemplo.test; cargo=Arquitecta líder
-   pertenece_a> UO-001
-   reporta_a> PER-004
-   tiene_rol> ROL-001
-   es_experto_en> APP-003
-   es_dueno_de> ARQ-001, ARQ-002, ARQ-003, RSG-001
-   aprueba> ADR-001, ADR-002, ADR-006, WVR-001
-PER-002|Persona|Carlos Mejía|-|email=carlos.mejia@banco-ejemplo.test; cargo=Dueño de producto de crédito
-   pertenece_a> UO-002
-   reporta_a> PER-004
-   es_dueno_de> APP-004, APP-005, APP-006, CAP-300, DAT-004
-PER-003|Persona|Lucía Torres|-|email=lucia.torres@banco-ejemplo.test; cargo=Líder de plataformas
-   pertenece_a> UO-001
-   reporta_a> PER-004
-   tiene_rol> ROL-001
-   es_experto_en> PLT-001
-   es_dueno_de> PLT-001, PLT-002, PLT-003, APP-002, APP-003
-PER-004|Persona|Mateo Vargas|-|email=mateo.vargas@banco-ejemplo.test; cargo=Vicepresidente de Tecnología
-   pertenece_a> UO-001
-   es_dueno_de> APP-001, DAT-001, DAT-002, DAT-003, CAP-100, CAP-200
-   aprueba> ADR-005
-ROL-001|Rol|Miembro del ARB|-|alcance=Revisa solicitudes de arquitectura en el sprint
-## catalogos/negocio.json (workspace negocio)
-CAP-100|CapacidadNegocio|Pagos|-|nivel=1; criticidad=tier-1
-CAP-110|CapacidadNegocio|Pagos inmediatos|CAP-100|nivel=2; criticidad=tier-1
-   es_realizada_por> APP-002, PRC-002
-CAP-200|CapacidadNegocio|Gestión de clientes y cuentas|-|nivel=1; criticidad=tier-1
-CAP-210|CapacidadNegocio|Vinculación digital de clientes|CAP-200|nivel=2; criticidad=tier-2
-   es_realizada_por> APP-004, PRC-001
-CAP-220|CapacidadNegocio|Mantenimiento de cuentas|CAP-200|nivel=2; criticidad=tier-1
-   es_realizada_por> APP-003
-CAP-300|CapacidadNegocio|Crédito|-|nivel=1; criticidad=tier-2
-CAP-310|CapacidadNegocio|Originación de crédito de consumo|CAP-300|nivel=2; criticidad=tier-2
-   es_realizada_por> APP-005, APP-006
-PRC-001|Proceso|Abrir cuenta de ahorros digital|-|nivel=1
-   usa> APP-004, APP-003
-PRC-002|Proceso|Enviar pago inmediato desde el móvil|-|nivel=1
-   usa> APP-001, APP-002
-## catalogos/aplicaciones.json (workspace aplicaciones)
-APP-001|Aplicacion|Banca Móvil|-|criticidad=tier-1; rto_min=60; rpo_min=5; fase_ciclo_vida=en_produccion; time=invertir; regulacion=SFC-CE-007-2018,SFC-CE-005-2019,LEY-1581-2012; tipo_desarrollo=propio
-   esta_sujeta_a> NOR-001
-MOD-001|ModuloAplicacion|bff-movil|APP-001|tipo_modulo=bff; fase_ciclo_vida=en_produccion
-   es_soportado_por> ENT-002(rol_soporte=ejecucion)
-   se_conecta_a> API-001(tipo_solicitud=lectura_escritura critica=true), API-003(tipo_solicitud=lectura critica=true)
-APP-002|Aplicacion|Pagos Inmediatos|-|criticidad=tier-1; rto_min=30; rpo_min=0; fase_ciclo_vida=en_produccion; time=invertir; regulacion=SFC-CE-007-2018,LEY-1581-2012; tipo_desarrollo=propio
-   esta_sujeta_a> NOR-001
-MOD-002|ModuloAplicacion|pagos-orquestador|APP-002|tipo_modulo=microservicio; fase_ciclo_vida=en_produccion
-   es_soportado_por> ENT-001(rol_soporte=ejecucion), BDD-002(rol_soporte=persistencia), TPR-001(rol_soporte=otro)
-   se_conecta_a> API-003(tipo_solicitud=lectura_escritura critica=true)
-   implementa> ARQ-001
-MOD-006|ModuloAplicacion|pagos-conciliacion|APP-002|tipo_modulo=batch; fase_ciclo_vida=en_produccion
-   es_soportado_por> ENT-001(rol_soporte=ejecucion), BDD-002(rol_soporte=persistencia), TPR-001(rol_soporte=otro)
-   implementa> ARQ-002
-APP-003|Aplicacion|Core Bancario|-|criticidad=tier-1; rto_min=30; rpo_min=0; fase_ciclo_vida=en_produccion; time=tolerar; regulacion=SFC-CE-007-2018,LEY-1581-2012; tipo_desarrollo=paquete
-   esta_sujeta_a> NOR-001, NOR-003
-MOD-004|ModuloAplicacion|core-cuentas|APP-003|tipo_modulo=microservicio; fase_ciclo_vida=en_produccion
-   es_soportado_por> ENT-001(rol_soporte=ejecucion), BDD-001(rol_soporte=persistencia)
-MOD-005|ModuloAplicacion|openbanking-adaptador|APP-003|tipo_modulo=adaptador; fase_ciclo_vida=en_produccion
-   es_soportado_por> ENT-001(rol_soporte=ejecucion), TPR-001(rol_soporte=otro)
-   se_conecta_a> API-003(tipo_solicitud=lectura critica=true)
-   implementa> ARQ-003
-APP-004|Aplicacion|Onboarding Digital|-|criticidad=tier-2; rto_min=120; rpo_min=15; fase_ciclo_vida=en_produccion; time=invertir; regulacion=LEY-1581-2012,SFC-CE-005-2019; tipo_desarrollo=propio
-   esta_sujeta_a> NOR-003
-MOD-003|ModuloAplicacion|onboarding-kyc|APP-004|tipo_modulo=microservicio; fase_ciclo_vida=en_produccion
-   es_soportado_por> ENT-002(rol_soporte=ejecucion)
-   se_conecta_a> API-003(tipo_solicitud=lectura_escritura critica=true)
-APP-005|Aplicacion|Originación de Crédito (legado)|-|criticidad=tier-2; rto_min=480; rpo_min=60; fase_ciclo_vida=en_produccion; time=migrar; regulacion=LEY-1581-2012; tipo_desarrollo=propio
-   es_soportado_por> ENT-001(rol_soporte=ejecucion), TPR-002(rol_soporte=otro)
-   se_conecta_a> API-003(tipo_solicitud=lectura critica=true)
-   implementa> ARQ-002
-   es_reemplazada_por> APP-006
-   esta_sujeta_a> TEC-001
-APP-006|Aplicacion|Plataforma de Crédito Digital|-|criticidad=tier-2; rto_min=240; rpo_min=15; fase_ciclo_vida=en_implementacion; regulacion=LEY-1581-2012; tipo_desarrollo=propio
-   es_soportado_por> ENT-003(rol_soporte=ejecucion), BDD-003(rol_soporte=persistencia)
-   se_conecta_a> API-003(tipo_solicitud=lectura critica=false)
-   esta_sujeta_a> NOR-003, NUB-002
-API-001|API|API Pagos Inmediatos v1|MOD-002|expuesta_a=canales; autenticacion=oauth2; via_gateway=true; version=v1
-   provee> DAT-002
-   esta_sujeta_a> SEG-001
-API-002|API|API Open Banking Cuentas|MOD-005|expuesta_a=terceros; autenticacion=oauth2; via_gateway=true; version=v1
-   provee> DAT-003, DAT-001
-   esta_sujeta_a> SEG-001, SEG-002
-API-003|API|API Core de Cuentas (interna)|MOD-004|expuesta_a=interna; autenticacion=mtls; via_gateway=false; version=v3
-   provee> DAT-003
-API-004|API|API Vinculación de Clientes|MOD-003|expuesta_a=canales; autenticacion=oidc; via_gateway=true; version=v1
-   provee> DAT-001
-IFZ-001|Interfaz|Evento crédito aprobado|APP-006|tipo_interfaz=evento
-   provee> DAT-004
-## catalogos/datos.json (workspace datos)
-DOM-001|DominioDatos|Clientes|-|-
-DOM-002|DominioDatos|Pagos y saldos|-|-
-DAT-001|EntidadDatos|Datos personales de clientes|DOM-001|clasificacion=restringida; datos_personales=true
-   esta_sujeta_a> NOR-003
-DAT-002|EntidadDatos|Orden de pago|DOM-002|clasificacion=confidencial; datos_personales=false
-DAT-003|EntidadDatos|Saldos y movimientos de cuentas|DOM-002|clasificacion=confidencial; datos_personales=true
-   esta_sujeta_a> NOR-003
-DAT-004|EntidadDatos|Solicitud de crédito|DOM-001|clasificacion=confidencial; datos_personales=true
-   esta_sujeta_a> NOR-003
-## catalogos/tecnologia.json (workspace tecnologia)
-PLT-001|Plataforma|OpenShift on-premise|-|tipo_plataforma=on_premise; proveedor=Red Hat
-PLT-002|Plataforma|AWS|-|tipo_plataforma=nube_publica; proveedor=Amazon; region=sa-east-1
-   esta_sujeta_a> NUB-002
-PLT-003|Plataforma|GCP|-|tipo_plataforma=nube_publica; proveedor=Google; region=southamerica-east1
-   esta_sujeta_a> NUB-002
-ENT-001|Entorno|OpenShift Producción|PLT-001|tipo_entorno=produccion
-ENT-002|Entorno|AWS Producción|PLT-002|tipo_entorno=produccion
-ENT-003|Entorno|GCP Producción|PLT-003|tipo_entorno=produccion
-BDD-001|BaseDatos|core-db|-|motor=Oracle; cifrado_reposo=true
-   es_soportado_por> ENT-001
-   almacena> DAT-003
-BDD-002|BaseDatos|pagos-db|-|motor=PostgreSQL; cifrado_reposo=true
-   es_soportado_por> ENT-001
-   almacena> DAT-002
-BDD-003|BaseDatos|credito-db|-|motor=Cloud SQL; cifrado_reposo=true
-   es_soportado_por> ENT-003
-   almacena> DAT-004
-TPR-001|ProductoTecnologico|Java 21|-|estado_estandar=aprobado; version=21
-TPR-002|ProductoTecnologico|Java 8|-|estado_estandar=obsoleto; version=8
-   es_reemplazada_por> TPR-001
-## catalogos/gobierno.json (workspace gobierno)
-NOR-001|Norma|SFC CE 007/2018|-|autoridad=Superintendencia Financiera de Colombia; descripcion=Requerimientos mínimos de seguridad y calidad
-NOR-002|Norma|SFC CE 005/2019|-|autoridad=Superintendencia Financiera de Colombia; descripcion=Uso de servicios de computación en la nube
-NOR-003|Norma|Ley 1581 de 2012|-|autoridad=Congreso de Colombia; descripcion=Protección de datos personales
-NOR-004|Norma|Política interna de arquitectura (ficticia)|-|autoridad=Banco Ejemplo
-SEG-001|Regla|APIs expuestas autenticadas y vía gateway|-|categoria=seguridad; enunciado=Toda API expuesta a canales o terceros se publica por el gateway con OAuth2 u OIDC
-   deriva_de> NOR-001, NOR-004
-SEG-002|Regla|mTLS para APIs a terceros|-|categoria=seguridad; enunciado=Las APIs a terceros que entregan datos confidenciales o restringidos exigen mTLS
-   deriva_de> NOR-001
-NUB-002|Regla|Cargas en nube pública declaran CE 005/2019|-|categoria=nube; enunciado=Toda aplicación en nube pública declara la regulación SFC-CE-005-2019 y la región
-   deriva_de> NOR-002
-TEC-001|Regla|Productos obsoletos o prohibidos solo con waiver|-|categoria=tecnologia; enunciado=Un producto obsoleto o prohibido solo se usa con un waiver vigente
-   deriva_de> NOR-004
-   mitiga> RSG-001
-ADR-001|ADR|Microservicios REST sobre OpenShift|-|estado=aceptado; fecha=2026-02-10
-   decide_sobre> APP-001, APP-002, APP-004, PLT-001
-ADR-002|ADR|Exposición de APIs a terceros con mTLS|-|estado=aceptado; fecha=2026-03-05
-   decide_sobre> API-002
-ADR-003|ADR|Modernización del Core Bancario|-|estado=propuesto; fecha=2026-09-15
-   decide_sobre> APP-003
-   mitiga> RSG-001
-ADR-004|ADR|Crédito Digital en GCP|-|estado=propuesto; fecha=2026-10-01
-   decide_sobre> APP-006, PLT-003
-ADR-005|ADR|Retiro gradual del crédito legado|-|estado=aceptado; fecha=2026-04-20
-   decide_sobre> APP-005
-ADR-006|ADR|Procesamiento batch nocturno en OpenShift|-|estado=aceptado; fecha=2026-05-12
-RSG-001|Riesgo|Obsolescencia del Core Bancario|-|severidad=alta
-   afecta_a> APP-003
-WVR-001|Waiver|Java 8 en el crédito legado|-|vence=2027-03-31; justificacion=La migración a Java 21 depende del retiro del crédito legado; plan_remediacion=Retirar APP-005 cuando APP-006 entre en producción
-   exceptua> TEC-001
-   se_otorga_a> APP-005
-SOL-001|SolicitudARB|Revisión de Crédito Digital en GCP|-|estado=en_revision; sprint=Sprint 42
-   evalua> APP-006
-   produce> ADR-004
-ARQ-001|Arquetipo|Microservicio REST en OpenShift|-|version=2.1; estado=aprobado; caso_uso=Microservicio REST síncrono de misión crítica desplegado en OpenShift; criticidad_maxima_soportada=tier-1; rto_base_min=30; rpo_base_min=0
-   deriva_de> ADR-001
-   se_despliega_en> PLT-001
-   usa> TPR-001
-   cumple> SEG-001, TEC-001
-ARQ-002|Arquetipo|Batch nocturno|-|version=1.0; estado=aprobado; caso_uso=Proceso batch nocturno de conciliación o carga; criticidad_maxima_soportada=tier-2; rto_base_min=480; rpo_base_min=60
-   deriva_de> ADR-006
-   se_despliega_en> PLT-001
-   usa> TPR-001
-   cumple> TEC-001
-ARQ-003|Arquetipo|API de exposición a terceros|-|version=1.0; estado=deprecado; caso_uso=API REST expuesta a terceros (v1, reemplazada por una versión con mTLS obligatorio); criticidad_maxima_soportada=tier-1; rto_base_min=30; rpo_base_min=0
-   deriva_de> ADR-002
-   se_despliega_en> PLT-001
-   usa> TPR-001
-   cumple> SEG-001, SEG-002
-</catalogo>
-
 ## Formato
-- Estructura de carpetas: `metamodelo.json`, `reglas-consistencia.json`, `catalogos/*.json` (6), `ejemplos-error/aplicaciones.json`, `reglas.js`, `validar.js`, `pruebas.js`, `probar.js`, `salida/` (grafo.json, reporte.md, 6 `.mmd`, evidencias), `NOTAS.md`.
-- JSON con indentación de 2 espacios; código JS con comentarios breves en español.
-- Tu respuesta final: una tabla "criterio de <esperado> | resultado real | OK/FALLA" con la salida real de los comandos, y debajo la lista de desviaciones o supuestos (si no hay, "ninguno"). Sin preámbulo ni resumen.
-- Antes de entregar, repite `node validar.js`, `node validar.js ejemplos-error` y `node pruebas.js` y confirma cada fila de la tabla contra la salida real.
+- Archivos: `demo/motor.js`, `probar-motor.js`, `plantilla.html`, `construir.js`, `metamodelo-demo.html`, `README.md`.
+- Código con comentarios breves en español. HTML válido, un solo archivo final.
+- Tu respuesta final: tabla "criterio de <esperado> | resultado real | OK/FALLA" con salidas reales, y lista de desviaciones o supuestos (si no hay, "ninguno"). Sin preámbulo ni resumen.
