@@ -1,760 +1,348 @@
-Para que la nueva instancia de Gemini entienda con exactitud el nivel técnico, el contexto corporativo y no empiece con respuestas genéricas o superficiales, necesitas un Prompt de Inicialización de Contexto y Profundización Técnica.
-A continuación tienes el prompt listo para copiar y pegar. Está diseñado para aprovechar la ventana de contexto de Gemini y extraer implementaciones técnicas reales (esquemas de datos, código y modelos de arquitectura).
-Prompt Maestro para la Nueva Instancia de Gemini
-Eres un Distinguished Enterprise Architect y AI Systems Engineer especializado en banca y servicios financieros a gran escala.
-[CONTEXTO DEL PROYECTO]
-En el área de Arquitectura Tecnológica Corporativa estamos diseñando y construyendo una plataforma denominada "Enterprise Brain" (IA + GraphRAG + Contexto Corporativo). El objetivo es evolucionar la arquitectura empresarial desde un repositorio documental pasivo hacia un sistema activo, continuo y computable para diseñar, gobernar y evolucionar arquitecturas tecnológicas con alta agilidad y consistencia.
-La plataforma se fundamenta en:
- * Fuentes y Ecosistema: Repositorios de código (Git/Backstage), herramientas de arquitectura (C4 Model, ArchiMate), CMDB/ITSM (ServiceNow CSDM 4.0/5.0), nubes públicas (AWS, Azure, GCP), herramientas de seguridad/riesgo (Wiz, SonarQube, Prisma) y catálogos de datos.
- * Memoria y Persistencia: Grafo de Conocimiento Empresarial (LPG sobre Neo4j/Amazon Neptune) unificado con bases de datos vectoriales (Qdrant/pgvector), y registros históricos de decisiones de arquitectura (ADRs bajo estándar MADR persistidos en Git).
- * Razonamiento Agéntico: Sistema multiagente jerárquico (Supervisor Pattern en LangGraph) con agentes especializados en: Diagnóstico y análisis de dependencias, Diseño asistido de arquitecturas, Validación y cumplimiento normativo, Análisis de obsolescencia técnica, Seguridad y riesgos, y Optimización de costos (FinOps).
- * Gobernanza Determinista: Desacoplamiento estricto entre el razonamiento estocástico del LLM y las reglas de negocio deterministas, implementando Policy-as-Code con Open Policy Agent (OPA / Rego) y restricciones semánticas con SHACL.
-[OBJETIVO DE LA INVESTIGACIÓN]
-Necesito que realices una profundización técnica de nivel de implementación y diseño detallado. No proporciones explicaciones conceptuales básicas; proporciona especificaciones técnicas, esquemas, código funcional y patrones de ingeniería aplicables a producción.
-Estructura tu entrega en los siguientes módulos:
-MÓDULO 1: MODELO ONTOLÓGICO Y ESQUEMA DEL GRAFO (NEO4J / CYPHER)
- * Define el metamodelo formal y los constraints DDL en Cypher para unificar:
-   * Capa Estratégica: BusinessCapability (ArchiMate)
-   * Capa de Gestión de Servicios: BusinessApplication y TechnicalService (ServiceNow CSDM)
-   * Capa de Ingeniería: SoftwareSystem y Container (C4 Model)
-   * Capa de Infraestructura Física: CloudResource (AWS/Azure/GCP / Terraform)
-   * Capa de Decisiones: ArchitectureDecision (MADR)
- * Proporciona una consulta Cypher avanzada para calcular el "Blast Radius" (radio de impacto técnico, de dependencias transitivas y criticidad de negocio) cuando se simula la baja o fallo de un microservicio central.
-MÓDULO 2: PIPELINE DE INGESTIÓN Y RESOLUCIÓN DE ENTIDADES (ENTITY RESOLUTION)
- * Diseña el pipeline técnico para resolver la desalineación de nombres e identidades entre los repositorios Git (catalog-info.yaml / código), las plantillas de infraestructura (Terraform plan) y los Configuration Items (CIs) de ServiceNow.
- * Especifica la estrategia de reconciliación determinista (identificadores únicos) y probabilística (embeddings de metadatos + similitud de grafos).
-MÓDULO 3: ARQUITECTURA MULTIAGENTE EN LANGGRAPH (PYTHON)
- * Proporciona una implementación en Python con LangGraph que defina:
-   * El StateGraph y el schema del estado compartido del sistema.
-   * El Agente Supervisor que analiza la solicitud del arquitecto y enruta tareas.
-   * El Agente de Diseño Asistido y el Agente de Cumplimiento.
-   * La compuerta de validación determinista que invoca a Open Policy Agent (OPA) antes de devolver cualquier diseño al usuario.
-MÓDULO 4: GOBERNANZA COMO CÓDIGO CON OPEN POLICY AGENT (REGO)
- * Escribe una regla de política completa y funcional en lenguaje Rego para validar un diseño de arquitectura (representado en JSON/AST).
- * La política debe evaluar:
-   * Que ningún contenedor que gestione datos clasificados como "Confidencial" o "Financiero" esté expuesto a la DMZ pública sin un API Gateway intermedio.
-   * Que los servicios de criticidad Tier-1 cuenten obligatoriamente con redundancia multi-región.
-MÓDULO 5: ESTRATEGIA DE RETRIEVAL EN GRAPHRAG HÍBRIDO
- * Detalla el algoritmo paso a paso para combinar la búsqueda semántica vectorial (documentación de estándares y políticas) con la navegación de subgrafos (topología de sistemas) para responder consultas complejas de arquitectura sin alucinaciones.
-MÓDULO 6: HOJA DE RUTA PARA UN MVP / POC DE 8 SEMANAS
- * Define el alcance exacto, los hitos quincenales, las 3 fuentes iniciales a conectar y las métricas objetivas (KPIs de arquitectura) para presentar resultados tangibles a la Dirección de Tecnología.
-[INSTRUCCIONES DE FORMATO]
- * Utiliza código real y limpio (Python, Cypher, Rego, Markdown).
- * Para tablas comparativas y diagramas, utiliza tablas Markdown estándar y listas jerárquicas en prosa técnica (evita diagramas de texto con cajas o flechas ASCII dentro de bloques de código).
- * Aplica enfoque de alta criticidad técnica para el sector bancario.
-Consejos para interactuar en la nueva sesión:
- * Adjunta la imagen de la arquitectura: Si estás utilizando Gemini Advanced o una interfaz con soporte multimodal, adjunta la misma imagen que compartiste aquí junto con el prompt. Esto permitirá que el modelo verifique visualmente la alineación con los componentes de Davivienda (las fuentes, el Enterprise Brain central y los 6 agentes).
- * Modo de avance recomendado: Si la respuesta inicial resulta muy densa o corta por límites de generación, puedes pedirle al inicio:
-   > "Empieza desarrollando a fondo el MÓDULO 1 y el MÓDULO 2. Cuando termine, te pediré que continúes con los siguientes."
-   > 
- * Carga de insumos reales: En esa nueva sesión puedes subir ejemplos reales de tu día a día (por ejemplo, un fragmento de un archivo catalog-info.yaml de Backstage, una exportación JSON de la CMDB de ServiceNow o un archivo .tf de Terraform) y pedirle que adapte los esquemas de Cypher y las reglas de OPA a tu sintaxis exacta.
+## Persona
+Eres un arquitecto de software senior (15+ años) en banca regulada colombiana, con experiencia en arquitectura empresarial (TOGAF, modelos de arquitectura en grafo), validación de modelos de datos en grafo y desarrollo en Node.js sin dependencias. Eres literal y verificable: construyes exactamente lo especificado, no inventas datos ni "mejoras" el diseño, y si algo es ambiguo eliges la lectura más simple y lo anotas en `NOTAS.md`. Nunca declaras que algo pasa sin haberlo ejecutado.
 
+## Tarea
+Genera en la carpeta actual el repositorio `metamodelo/` de un metamodelo de arquitectura empresarial para el ficticio "Banco Ejemplo": esquema, catálogos, validador, reglas de consistencia, pruebas y diagramas. Todo en español.
 
+Pasos:
+0. Ejecuta `node --version`. Si falla, no escribas scripts: ve al paso 8B.
+1. Crea `metamodelo.json` desde <metamodelo> (6 workspaces, 23 tipos de componente, 27 tipos de referencia, 65 triples, listas, campos globales, propagación de impacto, `modo_restricciones: "estricto"`). Cada referencia lleva frase e inversa.
+2. Crea `catalogos/<workspace>.json` desde <catalogo>, con la forma `{"workspace": "...", "componentes": [{"id","tipo","nombre","padre"?,"campos":{},"referencias":[{"tipo","destino","campos"?}]}]}`. Las referencias son SOLO salientes (el componente es el origen). Copia los datos tal cual, sin añadir ni quitar componentes ni referencias.
+3. Crea `ejemplos-error/aplicaciones.json` desde <errores>. Se valida SUMADO a `catalogos/`, no en lugar de él.
+4. Crea `reglas-consistencia.json` (por cada regla de <reglas_grf>: id, descripcion y severidad, editables) y `reglas.js`, módulo que exporta `evaluar(grafo)` con la lógica de las 14 reglas bajo el mismo ID y la severidad leída del JSON. `evaluar` devuelve `{fecha_corte, color, total, hallazgos}` con los hallazgos sin duplicados y ordenados por componente, mensaje, regla y severidad. Un ID inexistente o un campo ausente nunca lanza excepción: simplemente no produce hallazgo.
+5. Crea `validar.js` (Node, solo `fs` y `path`; importa `reglas.js`) según <validador>. Al correr sin opciones también imprime la sección "Consistencia del grafo (GRF-001..014)" y escribe `salida/consistencia.json`.
+6. Crea `pruebas.js` (`node:assert`) con un grafo limpio (VERDE) en memoria y casos de una sola mutación: al menos un caso positivo por cada regla GRF-001..014 y estos negativos: tier-3 sin RTO, API interna sin regla SEG, dato público sin SEG-002, waiver vigente sobre TEC-001, sucesora presente, dependencia no crítica, arquetipo en borrador (no es deprecado), RTO igual al base, waiver vigente sobre arquetipo (suspende 012, 013 y 014) y waiver vencido (no suspende). Total esperado: 32 casos.
+7. Crea `probar.js` (Node, sin bash, usa `child_process`) que ejecute `node validar.js`, `node validar.js ejemplos-error`, `node pruebas.js` y las consultas de <esperado>, guarde la evidencia en `salida/01-build.txt`, `02-errores.txt`, `03-pruebas.txt`, verifique cada resultado esperado con `node:assert` y termine con código 1 si alguno falla.
+8A. Ejecuta todo y corrige hasta que <esperado> se cumpla completo. 8B. Si no hay Node: revisa los catálogos a mano y escribe `salida/reporte.md` con errores y hallazgos GRF-001..014.
 
+DEBE: usar solo módulos nativos de Node; fecha de corte = campo `generado` del grafo (parámetro `--fecha`, por defecto la de hoy; en pruebas fija 2026-10-21), nunca el reloj dentro de las reglas; terminar con código 1 y sin escribir `grafo.json` si hay errores. Los errores de ejemplos-error se imprimen con la ruta del archivo JSON. NO DEBE: instalar nada, usar internet, usar datos reales, ni modificar los datos de <catalogo>.
 
+## Contexto
+Es un ejemplo didáctico para que Arquitectura Empresarial pruebe un metamodelo versionado en Git, con el catálogo como fuente de verdad y reglas de consistencia que cambian sin tocar código. El entorno de ejecución solo tiene Node.js (sin Python, OPA ni internet); las reglas van como JSON declarativo en lugar de Rego. Los únicos nombres reales son las normas públicas (SFC CE 007/2018, CE 005/2019, Ley 1581 de 2012). Fuera de alcance: interfaz gráfica, encuestas, escenarios, Gremlin, instalar paquetes, generar PNG (solo `.mmd`).
 
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Metamodelo de arquitectura empresarial</title>
-<style>
-:root{
-  --rojo:#DA0F1F; --rojo-osc:#9F0A16; --rojo-claro:#FDECEE; --rojo-medio:#F6B8BE;
-  --ambar:#F5A524; --tinta:#1C1C1E; --gris:#6B7280; --gris-claro:#F4F5F7; --linea:#E3E4E8; --verde:#1E9E5A;
-}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;background:#fff;overflow:hidden;color:var(--tinta);
-  font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif}
-#escenario{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center center;background:#fff;overflow:hidden}
-.barra-roja{position:absolute;left:0;top:0;width:100%;height:12px;background:var(--rojo)}
-.cabecera{position:absolute;left:80px;right:80px;top:30px;height:50px;display:flex;align-items:center;justify-content:space-between}
-.marca{display:flex;align-items:center;gap:14px;font-size:22px;font-weight:600;color:var(--tinta)}
-.marca i{width:22px;height:22px;background:var(--rojo);display:inline-block;border-radius:5px;transform:rotate(45deg)}
-.marca span{color:var(--gris);font-weight:400}
-.puntos{display:flex;gap:12px;align-items:center}
-.punto{width:14px;height:14px;border-radius:50%;background:var(--linea);cursor:pointer;transition:all .3s}
-.punto.on{background:var(--rojo);width:38px;border-radius:8px}
-.pie{position:absolute;left:80px;right:80px;bottom:22px;display:flex;justify-content:space-between;font-size:17px;color:var(--gris)}
-.slide{position:absolute;left:0;right:0;top:96px;bottom:60px;padding:0 80px;opacity:0;visibility:hidden;transform:translateX(40px);
-  transition:opacity .5s,transform .5s,visibility .5s}
-.slide.on{opacity:1;visibility:visible;transform:none}
-.slide.salio{transform:translateX(-40px)}
-h1{font-size:84px;line-height:1.05;margin:0 0 28px;font-weight:800;letter-spacing:-1.5px}
-h2{font-size:54px;line-height:1.1;margin:8px 0 14px;font-weight:800;letter-spacing:-.8px}
-h2 em,h1 em{font-style:normal;color:var(--rojo)}
-.sub{font-size:28px;color:var(--gris);margin:0 0 26px;line-height:1.35}
-.etiqueta{display:inline-block;font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--rojo);margin-bottom:6px}
-.btn{white-space:nowrap;font:inherit;font-size:22px;font-weight:600;border:2px solid var(--rojo);background:#fff;color:var(--rojo);padding:12px 26px;border-radius:12px;cursor:pointer;transition:all .2s}
-.btn:hover{background:var(--rojo-claro)}
-.btn.rojo{background:var(--rojo);color:#fff}.btn.rojo:hover{background:var(--rojo-osc)}
-.btn.suave{border-color:var(--linea);color:var(--tinta)}
-.btn.on{background:var(--rojo);color:#fff}
+<validador>
+CLI de validar.js: sin argumentos = valida + escribe `salida/grafo.json` (`{generado, modo_restricciones, componentes:{id:{id,tipo,workspace,nombre,padre,campos}}, referencias:[{tipo,origen,destino,campos}]}`), `salida/reporte.md` y los `.mmd`, evalúa las reglas GRF y ejecuta 3 consultas de ejemplo (impacto de PLT-002, datos sensibles en APIs expuestas, contexto de SOL-001). Opciones: `<carpeta>` (catálogos adicionales que se suman a catalogos/), `--modo guiado|estricto`, `--fecha AAAA-MM-DD`, `--impacto ID`, `--contexto SOL-ID`, `--arquetipo ARQ-ID`.
+Salida de errores: `ERROR E0xx ID: mensaje [archivo]`; resumen "Validación (estricto): N errores y M advertencias en K componentes".
+Códigos:
+- E001 workspace del archivo inexistente, o el tipo no vive en ese workspace. E002 tipo de componente inexistente. E003 ID con formato distinto de PREFIJO-NNN (tres dígitos, prefijos del tipo) o duplicado.
+- E004 campo obligatorio ausente (incluye `nombre`). E005 tipo de dato o rango (min/max) incorrecto. E006 valor fuera de la lista cerrada. E007 campo que no existe en el metamodelo (ni global). E008 campo obligatorio condicional (`requerido_si`) ausente. E004-E008 se aplican igual a los campos de las referencias.
+- E009 jerarquía: tipo sin padres permitidos que trae padre; tipo con padres y no raíz sin padre; padre inexistente, de tipo no permitido o de otro workspace (un solo error por componente: reporta la primera causa); ciclo; profundidad > nivel_max; campo `nivel` distinto de la profundidad (raíz = 1).
+- E010 tipo de referencia inexistente. E011 destino inexistente. E012 triple (tipoOrigen, referencia, tipoDestino) no definido: error en modo estricto, advertencia W012 en guiado. E016 referencia duplicada (mismo tipo y destino).
+- E014 cardinalidad por origen (`salida`) y `salida_total`; E015 cardinalidad por destino (`entrada`). Por origen: para cada componente del tipo origen del triple, cuenta sus referencias de ese tipo cuyo destino sea del tipo destino del triple. Por destino: para cada componente del tipo destino, cuenta las referencias entrantes de ese tipo cuyo origen sea del tipo origen del triple. `salida_total` cuenta todas las salientes de esa referencia.
+- Si una referencia tiene destino inexistente (E011) no se evalúan triple ni cardinalidad para ella.
+Impacto (`--impacto ID`): estado por componente, caído > degradado; el origen cae. Se itera hasta que nada cambie: (a) para es_soportado_por, se_conecta_a y usa, si el destino está caído el origen cae, salvo que la referencia traiga `critica:false` (campo de se_conecta_a), en cuyo caso el origen solo queda degradado; si el destino está degradado el origen queda degradado; (b) es_realizada_por: el origen cae solo si TODOS sus realizadores están caídos, degradado si alguno está afectado; (c) jerarquía: un Plataforma, Aplicacion o ModuloAplicacion caído hace caer a todos sus hijos; un hijo afectado deja al padre degradado y, si todos los hijos están caídos, el padre cae. Salida: "Si cae X: alcanza N componentes: A aplicaciones y C capacidades." (N excluye el origen) y tabla Tipo | Componente | Estado | Criticidad | Por qué (camino causal).
+Contexto (`--contexto SOL-ID`): por cada aplicación evaluada, 5 líneas: Aplicación (id nombre · tier · fase · RTO/RPO · dueño); Capacidad (las que la realizan) · Corre en (entornos de la app y sus módulos, con "nube pública" u "on-premise" según la plataforma padre); Datos (entidades que almacenan las bases de datos que la app o sus módulos usan, con [clasificación]) · Depende de (aplicaciones dueñas de las APIs a las que la app o sus módulos se conectan; "(no crítica)" si critica:false); Regulación declarada · inferida (nube pública → SFC-CE-005-2019; datos personales → LEY-1581-2012) → "falta declarar X" o "completa"; ADR (id y estado) · Waivers.
+Arquetipo (`--arquetipo ARQ-ID`): cabecera del arquetipo y tabla Implementado por | Aplicación | Tier | RTO/RPO | Desviaciones | Waiver. Desviaciones: "arquetipo deprecado (GRF-013)"; "tier-X supera tier-Y; RTO a < base b; RPO a < base b (GRF-014)" usando los niveles de la APLICACIÓN dueña; "despliega en PLT-00X fuera del arquetipo" (plataforma del entorno que no está en se_despliega_en); "usa TPR-00X nombre fuera del stack" (producto de es_soportado_por que el arquetipo no usa); si no hay: "ninguna desviación → VERDE casi automático". Waiver: "WVR-00X → regla" de los otorgados a la aplicación.
+Datos sensibles en APIs expuestas: por cada API con expuesta_a distinto de interna: expuesta a, gateway, auth, datos provistos con (clasificación), reglas a las que está sujeta, alerta "sin regla SEG" o "ok".
+Mermaid (`salida/*.mmd`): `flowchart TB`, sin subgrafos; cada tipo es un nodo coloreado por workspace con `classDef` (organizacion #e9d8fd, negocio #c6f6d5, aplicaciones #bee3f8, datos #fefcbf, tecnologia #fed7aa, gobierno #fecaca); una flecha por par (origen, destino) con las referencias unidas por " / "; jerarquía padre-hijo como línea punteada `-.-`. Vistas: metamodelo, metamodelo-nucleo, vista-estructura, vista-gobierno, vista-organizacion, vista-arquetipos (esta última: las referencias que entran o salen de Arquetipo).
+</validador>
 
-/* portada */
-#s0{display:flex;align-items:center}
-#s0 .texto{width:1060px;z-index:2}
-#s0 .grafo{position:absolute;right:40px;top:20px;width:760px;height:800px}
-.nodo-p{fill:var(--rojo);animation:latido 3s ease-in-out infinite}
-.nodo-p.claro{fill:var(--rojo-medio)}
-.lazo{stroke:var(--rojo-medio);stroke-width:2;fill:none}
-@keyframes latido{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(1.25)}}
-.nodo-p{transform-box:fill-box;transform-origin:center}
-.datos-pie{margin-top:34px;font-size:22px;color:var(--gris)}
+<reglas_grf>
+Color: alguna severidad alta → ROJO; si no, algún hallazgo → AMARILLO; ninguno → VERDE. Salida: color, total y lista {regla, severidad, componente, mensaje}. "Crítica" = tier-1 o tier-2 y no retirada. "App de X" = X si es Aplicacion, si no su ancestro Aplicacion. Un waiver está "vigente" si su `vence` >= `generado`. Un waiver "exceptúa" algo si tiene referencia exceptua hacia ello y se_otorga_a la aplicación.
+GRF-001 alta: toda crítica declara rto_min y rpo_min.
+GRF-002 alta: toda crítica tiene exactamente un dueño (es_dueno_de entrante).
+GRF-003 media: toda crítica en producción tiene un ADR con estado aceptado que decide_sobre ella.
+GRF-004 alta: toda API con expuesta_a canales o terceros está esta_sujeta_a al menos una regla cuyo ID empieza por SEG-.
+GRF-005 media: toda API a terceros que provee datos confidenciales o restringidos está sujeta a SEG-002.
+GRF-006 alta: Aplicacion o ModuloAplicacion que es_soportado_por un producto obsoleto o prohibido sin waiver vigente que exceptúe TEC-001 otorgado a su aplicación.
+GRF-007 media: aplicación que corre en nube pública (entornos de ella o de sus hijos cuyo padre Plataforma es nube_publica) y no declara SFC-CE-005-2019 en regulacion.
+GRF-008 media: time = migrar sin es_reemplazada_por.
+GRF-009 alta: referencia se_conecta_a o usa hacia un componente de una aplicación retirada, desde un origen cuya aplicación no esté retirada.
+GRF-010 media: una crítica con rto_min menor que el rto_min de la aplicación de una API a la que ella o sus hijos se conectan con critica distinto de false (excluida ella misma).
+GRF-011 baja: waiver con vence < generado.
+GRF-012 media: aplicación en_implementacion donde ni ella ni sus hijos implementan un arquetipo con estado aprobado, y sin waiver vigente que exceptúe cualquier arquetipo.
+GRF-013 alta: Aplicacion o ModuloAplicacion que implementa un arquetipo deprecado, salvo waiver vigente que exceptúe ese arquetipo a su aplicación.
+GRF-014 alta: quien implementa un arquetipo (salvo waiver vigente sobre ese arquetipo) con una aplicación cuyo tier es MÁS crítico que criticidad_maxima_soportada (tier-1 supera tier-2), o rto_min < rto_base_min, o rpo_min < rpo_base_min. Un solo hallazgo por implementador, con los motivos unidos por "; ".
+</reglas_grf>
 
-/* s1 */
-.dos{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px}
-.tarjeta{border-radius:20px;padding:34px 40px;border:2px solid var(--linea);background:#fff}
-.tarjeta.roja{border-color:var(--rojo);background:var(--rojo-claro)}
-.tarjeta h3{margin:0 0 18px;font-size:32px}
-.tarjeta.roja h3{color:var(--rojo)}
-.lista{list-style:none;margin:0;padding:0}
-.lista li{font-size:28px;line-height:1.3;padding:14px 0 14px 50px;position:relative;opacity:0;transform:translateY(14px);transition:all .5s}
-.lista li.v{opacity:1;transform:none}
-.lista li::before{content:"✕";position:absolute;left:0;top:13px;width:34px;height:34px;border-radius:50%;background:#E5E7EB;color:var(--gris);font-size:20px;text-align:center;line-height:34px;font-weight:700}
-.tarjeta.roja .lista li::before{content:"✓";background:var(--rojo);color:#fff}
-.franja{margin-top:30px;display:flex;align-items:center;justify-content:center;gap:40px;font-size:34px;font-weight:700;
-  background:var(--gris-claro);border-radius:18px;padding:20px 30px;opacity:0;transition:opacity .6s}
-.franja.v{opacity:1}
-.franja b{font-size:58px;color:var(--rojo)}
-.franja small{display:block;font-size:16px;font-weight:400;color:var(--gris);margin-top:2px}
+<esperado>
+- `node validar.js`: 0 errores, 0 advertencias, 71 componentes, 142 referencias, 24 relaciones padre-hijo.
+- `node validar.js ejemplos-error`: exactamente 14 errores, código de salida 1, sin grafo.json.
+- Reglas sobre el catálogo (fecha 2026-10-21): ROJO, 6 hallazgos: GRF-003 APP-003; GRF-004 API-004; GRF-007 APP-006; GRF-012 APP-006; GRF-013 MOD-005; GRF-014 MOD-006 (RPO 0 < base 60; RTO 30 < base 480; tier-1 supera tier-2).
+- `--impacto PLT-002`: alcanza 12 componentes, 2 aplicaciones (APP-001, APP-004) y 4 capacidades (CAP-100, 110, 200 degradadas; CAP-210 caída).
+- `--impacto ENT-001`: alcanza 28 componentes, 6 aplicaciones, 7 capacidades.
+- `--contexto SOL-001`: APP-006 tier-2, en_implementacion, RTO 240 / RPO 15, dueño PER-002; corre en ENT-003 (nube pública); regulación declarada LEY-1581-2012, inferida + SFC-CE-005-2019 → falta declarar SFC-CE-005-2019; ADR-004 (propuesto); sin waivers.
+- `--arquetipo ARQ-001`: MOD-002 sin desviaciones. `ARQ-002`: APP-005 (usa TPR-002 Java 8 fuera del stack, waiver WVR-001 → TEC-001) y MOD-006 (GRF-014). `ARQ-003`: MOD-005 (deprecado, GRF-013).
+- Datos sensibles en APIs expuestas: API-001 ok, API-002 ok, API-004 "sin regla SEG".
+- `node pruebas.js`: 32 casos, todos pasan.
+</esperado>
 
-/* s2 */
-.cifras{display:flex;gap:18px;margin:6px 0 22px}
-.cifra{border-left:6px solid var(--rojo);padding:2px 22px 2px 16px;font-size:20px;color:var(--gris)}
-.cifra b{display:block;font-size:50px;color:var(--tinta);line-height:1}
-.estructura{display:grid;grid-template-columns:minmax(0,1fr) 620px;gap:36px}
-.areas{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-content:start}
-.area{border:2px solid var(--linea);border-radius:16px;padding:16px 18px;background:#fff}
-.area h4{margin:0 0 4px;font-size:23px;color:var(--rojo)}
-.area p{margin:0 0 10px;font-size:15px;color:var(--gris)}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{font:inherit;font-size:18px;padding:7px 14px;border-radius:20px;border:2px solid var(--linea);background:var(--gris-claro);cursor:pointer;transition:all .2s}
-.chip:hover{border-color:var(--rojo)}
-.chip.on{background:var(--rojo);color:#fff;border-color:var(--rojo)}
-.detalle{border:2px solid var(--rojo);border-radius:20px;padding:26px 30px;background:#fff;height:690px;overflow:hidden;position:relative}
-.detalle h3{margin:0;font-size:38px}
-.detalle .tag{display:inline-block;font-size:15px;font-weight:700;padding:3px 12px;border-radius:12px;background:var(--rojo-claro);color:var(--rojo);margin:8px 8px 6px 0}
-.detalle h5{margin:14px 0 6px;font-size:16px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gris)}
-.detalle ul{margin:0;padding:0;list-style:none}
-.detalle li{font-size:20px;padding:5px 0;line-height:1.25}
-.detalle li small{color:var(--gris);font-size:15px;margin-left:6px}
-.detalle li b{color:var(--rojo)}
-.acciones{position:absolute;left:30px;right:30px;bottom:20px;display:flex;gap:10px;flex-wrap:wrap}
-.acciones .btn{font-size:18px;padding:9px 16px}
-.resultado{position:absolute;left:30px;right:30px;bottom:76px;padding:12px 16px;border-radius:12px;font-size:19px;line-height:1.3;display:none}
-.resultado.ok{display:block;background:#E8F6EE;color:#0F6B3C;border:2px solid var(--verde)}
-.resultado.mal{display:block;background:var(--rojo-claro);color:var(--rojo-osc);border:2px solid var(--rojo);animation:sacudir .4s}
-@keyframes sacudir{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+<errores>
+Archivo ejemplos-error/aplicaciones.json (workspace aplicaciones). Debe producir exactamente 14 errores:
+APP-901|Aplicacion|Aplicación con errores de campos y referencias|-|criticidad=tier-1; fase_ciclo_vida=en_implementacion; tipo_desarrollo=propio
+   usa> BDD-999
+   implementa> ARQ-999
+   se_conecta_a> API-001(tipo_solicitud=lectura), API-001(tipo_solicitud=lectura)
+ → E008 rto_min, E008 rpo_min, E011 usa BDD-999, E011 implementa ARQ-999, E016 duplicada, E015 sin dueño (6)
+APP-902|Aplicacion|Aplicación con valores fuera del metamodelo|-|criticidad=tier-3; fase_ciclo_vida=produccion; tipo_desarrollo=paquete; sla=99.9
+   es_realizada_por> APP-901
+ → E006 fase, E007 sla, E012 triple Aplicacion es_realizada_por Aplicacion, E015 sin dueño (4)
+MOD-1|ModuloAplicacion|modulo-huerfano|-|tipo_modulo=microservicio; fase_ciclo_vida=en_implementacion
+   es_soportado_por> ENT-001
+ → E003 formato de ID, E009 sin padre (2)
+API-901|API|API con padre inválido|CAP-100|expuesta_a=canales; autenticacion=oauth2
+ → E004 falta via_gateway, E009 padre CAP-100 de tipo no permitido (2)
+</errores>
 
-/* s3 mapa */
-.controles{display:flex;align-items:center;gap:12px;margin:0 0 8px;height:70px;white-space:nowrap}
-.controles .btn{font-size:20px;padding:9px 18px}
-.controles .espacio{flex:1}
-.marcador{display:flex;gap:22px;font-size:21px;align-items:baseline}
-.marcador b{font-size:42px;color:var(--rojo);margin-right:6px;font-variant-numeric:tabular-nums}
-.marcador span{color:var(--gris)}
-#mapa{display:block;width:1700px;height:838px}
-.banda{fill:var(--gris-claro)}
-.banda.neg{fill:#FDF3F4}
-.rotulo{font-size:15px;font-weight:700;letter-spacing:3px;fill:var(--gris)}
-.arista{fill:none;stroke:#9CA3AF;stroke-width:1.2;opacity:.28;transition:all .4s}
-.arista.jer{stroke-dasharray:4 4;opacity:.2}
-.arista.activa{stroke:var(--rojo);stroke-width:3.6;opacity:1;stroke-dasharray:none;filter:drop-shadow(0 0 3px rgba(218,15,31,.5))}
-.nodo{cursor:pointer}
-.nodo rect{fill:#fff;stroke:#BFC3CB;stroke-width:1.5;transition:all .35s}
-.nodo:hover rect{stroke:var(--rojo);stroke-width:2.5}
-.nodo .id{font-size:13px;font-weight:700;fill:var(--tinta);pointer-events:none}
-.nodo .nm{font-size:12px;fill:var(--gris);pointer-events:none}
-.nodo.caido rect{fill:var(--rojo);stroke:var(--rojo-osc);animation:caida .7s}
-.nodo.caido .id,.nodo.caido .nm{fill:#fff}
-.nodo.degradado rect{fill:var(--ambar);stroke:#B87500;animation:caida .7s}
-.nodo.degradado .id{fill:#2b1d00}.nodo.degradado .nm{fill:#4d3600}
-.nodo.origen rect{fill:var(--rojo-osc);stroke:#000;stroke-width:3}
-.nodo.tenue{opacity:.35}
-@keyframes caida{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
-.nodo rect{transform-box:fill-box;transform-origin:center}
-.leyenda{display:flex;gap:26px;font-size:18px;color:var(--gris);align-items:center}
-.leyenda i{display:inline-block;width:18px;height:18px;border-radius:4px;margin-right:8px;vertical-align:-3px;border:1.5px solid #BFC3CB}
-.porque{position:absolute;right:80px;top:150px;width:560px;background:#fff;border:2px solid var(--rojo);border-radius:16px;padding:18px 22px;font-size:19px;
-  box-shadow:0 14px 40px rgba(0,0,0,.18);display:none;z-index:5}
-.porque h6{margin:0 0 8px;font-size:15px;letter-spacing:1.5px;color:var(--rojo);text-transform:uppercase}
-.porque p{margin:5px 0;line-height:1.3}
-.porque .x{position:absolute;right:14px;top:8px;cursor:pointer;font-size:24px;color:var(--gris)}
-.comparar{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1180px;background:#fff;border:3px solid var(--rojo);border-radius:24px;
-  padding:34px 44px;box-shadow:0 30px 80px rgba(0,0,0,.28);display:none;z-index:6}
-.comparar h3{margin:0 0 22px;font-size:38px}
-.barra-f{display:grid;grid-template-columns:230px 1fr 130px;gap:18px;align-items:center;margin:14px 0;font-size:26px}
-.barra-f .pista{background:var(--gris-claro);height:48px;border-radius:10px;overflow:hidden}
-.barra-f .relleno{height:100%;background:var(--rojo);width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
-.barra-f .relleno.ambar{background:var(--ambar)}
-.barra-f b{font-size:34px;text-align:right}
-.comparar .conc{margin-top:18px;font-size:26px;color:var(--rojo-osc);font-weight:600}
-.comparar .cerrar{position:absolute;right:26px;top:14px;font-size:34px;cursor:pointer;color:var(--gris)}
+<metamodelo>
+LISTAS (valores cerrados):
+criticidad=tier-1,tier-2,tier-3,tier-4
+fase_ciclo_vida=en_implementacion,en_produccion,en_retiro,retirado
+time=tolerar,invertir,migrar,eliminar
+clasificacion_datos=publica,interna,confidencial,restringida
+regulacion=SFC-CE-007-2018,SFC-CE-005-2019,LEY-1581-2012,PCI-DSS
+tipo_desarrollo=propio,paquete,saas
+tipo_modulo=microservicio,batch,bff,adaptador,libreria
+tipo_interfaz=evento,archivo,mensajeria,soap
+expuesta_a=interna,canales,terceros
+autenticacion=oauth2,oidc,mtls,api_key,ninguna
+tipo_plataforma=on_premise,nube_publica,nube_privada
+tipo_entorno=produccion,dr,pruebas
+estado_estandar=aprobado,contener,obsoleto,prohibido
+estado_adr=propuesto,aceptado,reemplazado,rechazado
+estado_arquetipo=borrador,aprobado,deprecado
+estado_solicitud=recibida,en_revision,resuelta
+severidad=alta,media,baja
+categoria_regla=seguridad,nube,tecnologia,integracion
+tipo_solicitud=lectura,escritura,lectura_escritura
+rol_soporte=ejecucion,persistencia,almacenamiento,otro
 
-/* s4 */
-.arb{display:grid;grid-template-columns:690px 1fr;gap:34px;margin-top:8px}
-.solicitud{border:2px solid var(--linea);border-radius:20px;padding:24px 28px;height:700px}
-.solicitud h3{margin:0 0 4px;font-size:30px}
-.solicitud .idl{color:var(--rojo);font-weight:700;font-size:20px}
-.hecho{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--linea);font-size:19px;line-height:1.25;opacity:0;transform:translateX(-14px);transition:all .45s}
-.hecho.v{opacity:1;transform:none}
-.hecho span{color:var(--gris);font-size:15px;letter-spacing:1px;text-transform:uppercase;padding-top:3px}
-.hecho .mal{color:var(--rojo-osc);font-weight:700}
-.reglas{border:2px solid var(--linea);border-radius:20px;padding:20px 26px;position:relative;height:700px;overflow:hidden}
-.reglas h3{margin:0 0 8px;font-size:26px}
-.regla{display:grid;grid-template-columns:44px 96px 1fr;align-items:center;gap:6px;padding:5px 0;font-size:17px;border-top:1px solid #EEE;opacity:.28;transition:all .4s}
-.regla.v{opacity:1}
-.regla .est{width:30px;height:30px;border-radius:50%;text-align:center;line-height:30px;font-weight:700;color:#fff;background:var(--verde);font-size:17px}
-.regla.fallo .est{background:var(--rojo)}
-.regla.fallo{background:var(--rojo-claro);border-radius:8px}
-.regla .rid{font-weight:700;color:var(--gris)}
-.regla.fallo .rid{color:var(--rojo)}
-.regla small{display:block;color:var(--rojo-osc);font-weight:600;font-size:15px}
-.semaforo{position:absolute;right:26px;top:20px;display:flex;align-items:center;gap:14px;opacity:0;transform:scale(.7);transition:all .6s}
-.semaforo.v{opacity:1;transform:none}
-.luz{width:58px;height:58px;border-radius:50%;background:var(--ambar);box-shadow:0 0 0 8px rgba(245,165,36,.25)}
-.luz.rojo{background:var(--rojo);box-shadow:0 0 0 8px rgba(218,15,31,.22)}
-.semaforo b{font-size:30px;display:block;line-height:1}
-.semaforo span{font-size:17px;color:var(--gris)}
-.banco{position:absolute;inset:0;background:#fff;padding:24px 30px;display:none;overflow:hidden}
-.banco h3{margin:0 0 6px;font-size:30px}
-.hallazgo{display:grid;grid-template-columns:84px 70px 100px 1fr;gap:10px;padding:10px 0;border-top:1px solid #EEE;font-size:18px;align-items:center}
-.hallazgo .sev{font-size:14px;font-weight:700;padding:3px 10px;border-radius:10px;text-align:center;color:#fff;background:var(--ambar)}
-.hallazgo .sev.alta{background:var(--rojo)}
-.hallazgo b{color:var(--rojo)}
+TIPOS DE COMPONENTE: Tipo|workspace|prefijo|padres permitidos|raiz|nivel_max|campos   (! = obligatorio; L = lista cerrada <nombre>; LM = lista múltiple)
+Organizacion|organizacion|ORG|-|si|-|pais:txt
+UnidadOrganizacional|organizacion|UO|Organizacion/UnidadOrganizacional|no|-|tipo_unidad:txt
+Persona|organizacion|PER|-|si|-|email:email!, cargo:txt
+Rol|organizacion|ROL|-|si|-|alcance:txt
+CapacidadNegocio|negocio|CAP|CapacidadNegocio|si|3|nivel:int[1..3]!, criticidad:L<criticidad>
+Proceso|negocio|PRC|Proceso|si|2|nivel:int[1..2]!
+Aplicacion|aplicaciones|APP|-|si|-|criticidad:L<criticidad>!, rto_min:int[0..](si criticidad en tier-1/tier-2), rpo_min:int[0..](si criticidad en tier-1/tier-2), fase_ciclo_vida:L<fase_ciclo_vida>!, fecha_retiro:fecha(si fase_ciclo_vida en en_retiro), time:L<time>(si fase_ciclo_vida en en_produccion/en_retiro), regulacion:LM<regulacion>, tipo_desarrollo:L<tipo_desarrollo>!, codigo_cmdb:txt
+ModuloAplicacion|aplicaciones|MOD|Aplicacion|no|-|tipo_modulo:L<tipo_modulo>!, fase_ciclo_vida:L<fase_ciclo_vida>!
+API|aplicaciones|API|Aplicacion/ModuloAplicacion|no|-|expuesta_a:L<expuesta_a>!, autenticacion:L<autenticacion>!, via_gateway:bool!, version:txt, p99_ms:int[0..]
+Interfaz|aplicaciones|IFZ|Aplicacion/ModuloAplicacion|no|-|tipo_interfaz:L<tipo_interfaz>!
+DominioDatos|datos|DOM|-|si|-|-
+EntidadDatos|datos|DAT|DominioDatos|no|-|clasificacion:L<clasificacion_datos>!, datos_personales:bool!
+Plataforma|tecnologia|PLT|-|si|-|tipo_plataforma:L<tipo_plataforma>!, proveedor:txt, region:txt(si tipo_plataforma en nube_publica)
+Entorno|tecnologia|ENT|Plataforma|no|-|tipo_entorno:L<tipo_entorno>!
+BaseDatos|tecnologia|BDD|-|si|-|motor:txt, cifrado_reposo:bool!
+ProductoTecnologico|tecnologia|TPR|-|si|-|estado_estandar:L<estado_estandar>!, version:txt
+Norma|gobierno|NOR|Norma|si|-|autoridad:txt
+Regla|gobierno|SEG/NUB/TEC/INT/RND|-|si|-|categoria:L<categoria_regla>!, enunciado:txt!
+ADR|gobierno|ADR|-|si|-|estado:L<estado_adr>!, fecha:fecha!
+Riesgo|gobierno|RSG|-|si|-|severidad:L<severidad>!
+Waiver|gobierno|WVR|-|si|-|vence:fecha!, justificacion:txt!, plan_remediacion:txt!
+SolicitudARB|gobierno|SOL|-|si|-|estado:L<estado_solicitud>!, sprint:txt
+Arquetipo|gobierno|ARQ|-|si|-|version:txt!, estado:L<estado_arquetipo>!, caso_uso:txt!, criticidad_maxima_soportada:L<criticidad>!, rto_base_min:int[0..]!, rpo_base_min:int[0..]!
+Campos globales opcionales en todo tipo (dentro de campos): descripcion:txt, fuente:txt, revisado:fecha, etiquetas:LM libre. "nombre" va en la raíz del componente y es obligatorio.
 
-/* s5 */
-#s5{display:flex;flex-direction:column;justify-content:center}
-.grandes{display:grid;grid-template-columns:repeat(3,1fr);gap:34px;margin:30px 0}
-.grande{border-top:8px solid var(--rojo);padding:20px 0 0}
-.grande b{display:block;font-size:100px;line-height:1;color:var(--tinta);font-variant-numeric:tabular-nums}
-.grande span{font-size:28px;color:var(--gris)}
-.valor{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin:10px 0 28px}
-.valor div{background:var(--rojo-claro);border-radius:18px;padding:24px 28px;font-size:25px;line-height:1.3}
-.valor strong{display:block;color:var(--rojo);font-size:29px;margin-bottom:6px}
-.frase{font-size:50px;font-weight:800;line-height:1.15;letter-spacing:-.6px;border-left:12px solid var(--rojo);padding:6px 0 6px 30px}
-.paso{margin-top:22px;font-size:24px;color:var(--gris)}
+TIPOS DE REFERENCIA (27) y triples (65): tipo | frase | inversa | campos de la referencia | triples Origen>Destino {salida:min-max por origen, entrada:min-max por destino} | salida_total
+pertenece_a | {o} pertenece a {d} | agrupa a | - | Persona>UnidadOrganizacional{salida:1-1} | -
+reporta_a | {o} reporta a {d} | es jefe de | - | Persona>Persona{salida:-1} | -
+es_dueno_de | {o} es dueño de {d} | tiene como dueño a | - | Persona>Aplicacion{entrada:1-1}; Persona>CapacidadNegocio; Persona>EntidadDatos{entrada:1-1}; Persona>UnidadOrganizacional; Persona>Plataforma{entrada:1-1}; Persona>Riesgo{entrada:1-1}; Persona>Arquetipo{entrada:1-1} | -
+es_experto_en | {o} es experto en {d} | tiene como experto a | - | Persona>Aplicacion; Persona>Plataforma | -
+tiene_rol | {o} tiene el rol {d} | es ejercido por | - | Persona>Rol | -
+consume | {o} consume {d} | es consumida por | - | UnidadOrganizacional>Aplicacion | -
+es_realizada_por | {o} es realizada por {d} | realiza a | - | CapacidadNegocio>Aplicacion; CapacidadNegocio>Proceso | -
+usa | {o} usa {d} | es usado por | - | Proceso>Aplicacion{salida:1-}; Arquetipo>ProductoTecnologico | -
+es_soportado_por | {o} es soportado por {d} | soporta a | rol_soporte:L<rol_soporte> | Aplicacion>Entorno; Aplicacion>BaseDatos; Aplicacion>ProductoTecnologico; ModuloAplicacion>Entorno{salida:1-}; ModuloAplicacion>BaseDatos; ModuloAplicacion>ProductoTecnologico; BaseDatos>Entorno{salida:1-2} | -
+se_conecta_a | {o} se conecta a {d} | recibe conexión de | tipo_solicitud:L<tipo_solicitud>!, critica:bool | Aplicacion>API; Aplicacion>Interfaz; ModuloAplicacion>API; ModuloAplicacion>Interfaz | -
+provee | {o} provee {d} | es provista por | - | API>EntidadDatos; Interfaz>EntidadDatos | -
+almacena | {o} almacena {d} | se almacena en | - | BaseDatos>EntidadDatos | -
+es_reemplazada_por | {o} es reemplazada por {d} | reemplaza a | - | Aplicacion>Aplicacion{salida:-1}; ProductoTecnologico>ProductoTecnologico{salida:-1} | -
+esta_sujeta_a | {o} está sujeta a {d} | aplica a | - | Aplicacion>Norma; Aplicacion>Regla; API>Regla; Plataforma>Regla; EntidadDatos>Norma | -
+deriva_de | {o} deriva de {d} | origina a | - | Regla>Norma{salida:1-}; Arquetipo>ADR{salida:1-} | -
+decide_sobre | {o} decide sobre {d} | es decidido por | - | ADR>Aplicacion; ADR>ModuloAplicacion; ADR>API; ADR>Plataforma; ADR>ProductoTecnologico | -
+reemplaza_adr | {o} reemplaza a {d} | es reemplazado por | - | ADR>ADR{salida:-1} | -
+afecta_a | {o} afecta a {d} | es afectado por | - | Riesgo>Aplicacion; Riesgo>CapacidadNegocio; Riesgo>Plataforma | -
+mitiga | {o} mitiga {d} | es mitigado por | - | Regla>Riesgo; ADR>Riesgo | -
+exceptua | {o} exceptúa {d} | es exceptuado por | - | Waiver>Regla; Waiver>Arquetipo | 1-1
+implementa | {o} implementa {d} | es implementado por | - | Aplicacion>Arquetipo{salida:-1}; ModuloAplicacion>Arquetipo{salida:-1} | -
+se_despliega_en | {o} se despliega en {d} | despliega a | - | Arquetipo>Plataforma{salida:1-} | -
+cumple | {o} cumple {d} | es cumplida por | - | Arquetipo>Regla{salida:1-} | -
+se_otorga_a | {o} se otorga a {d} | recibe a | - | Waiver>Aplicacion{salida:1-1} | -
+evalua | {o} evalúa {d} | es evaluado por | - | SolicitudARB>Aplicacion; SolicitudARB>ModuloAplicacion; SolicitudARB>API | -
+produce | {o} produce {d} | es producido por | - | SolicitudARB>ADR; SolicitudARB>Waiver | -
+aprueba | {o} aprueba {d} | es aprobado por | - | Persona>ADR; Persona>Waiver{entrada:1-} | -
 
-/* notas */
-#notas{position:absolute;left:0;right:0;bottom:0;background:#1C1C1E;color:#fff;font-size:26px;line-height:1.4;padding:26px 80px 34px;display:none;z-index:9;border-top:6px solid var(--rojo)}
-#notas b{color:#FF8A93;display:block;font-size:16px;letter-spacing:2px;margin-bottom:6px}
-.ayuda{position:absolute;right:80px;top:96px;font-size:15px;color:var(--gris);z-index:4}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
-</head>
-<body>
-<div id="escenario">
-  <div class="barra-roja"></div>
-  <div class="cabecera">
-    <div class="marca"><i></i>Metamodelo de arquitectura <span>· Banco Ejemplo</span></div>
-    <div class="puntos" id="puntos"></div>
-  </div>
+</metamodelo>
 
-  <!-- PORTADA -->
-  <section class="slide" id="s0">
-    <div class="texto">
-      <span class="etiqueta">Arquitectura Empresarial</span>
-      <h1>El mapa vivo<br>de cómo se <em>conecta</em><br>el banco</h1>
-      <p class="sub">Aplicaciones, datos, tecnología, riesgo y regulación en un solo modelo que se puede consultar, validar y simular.</p>
-      <p class="datos-pie">Equipo de Arquitectura Empresarial · Datos ficticios de “Banco Ejemplo”</p>
-    </div>
-    <svg class="grafo" id="grafoPortada" viewBox="0 0 760 800"></svg>
-  </section>
+<catalogo>
+Formato: ID|Tipo|nombre|padre|campos (clave=valor; listas separadas por coma; true/false son booleanos; números sin comillas en JSON). Debajo, las referencias salientes: `tipo> destino1, destino2`; `(clave=valor)` son campos de la referencia. Las fechas van como texto AAAA-MM-DD. Total: 71 componentes, 142 referencias, 24 con padre.
+## catalogos/organizacion.json (workspace organizacion)
+ORG-001|Organizacion|Banco Ejemplo|-|pais=Colombia; descripcion=Banco ficticio usado como ejemplo
+UO-001|UnidadOrganizacional|Vicepresidencia de Tecnología|ORG-001|tipo_unidad=vicepresidencia
+UO-002|UnidadOrganizacional|Vicepresidencia de Negocios Digitales|ORG-001|tipo_unidad=vicepresidencia
+   consume> APP-001, APP-004, APP-006
+PER-001|Persona|Ana Rojas|-|email=ana.rojas@banco-ejemplo.test; cargo=Arquitecta líder
+   pertenece_a> UO-001
+   reporta_a> PER-004
+   tiene_rol> ROL-001
+   es_experto_en> APP-003
+   es_dueno_de> ARQ-001, ARQ-002, ARQ-003, RSG-001
+   aprueba> ADR-001, ADR-002, ADR-006, WVR-001
+PER-002|Persona|Carlos Mejía|-|email=carlos.mejia@banco-ejemplo.test; cargo=Dueño de producto de crédito
+   pertenece_a> UO-002
+   reporta_a> PER-004
+   es_dueno_de> APP-004, APP-005, APP-006, CAP-300, DAT-004
+PER-003|Persona|Lucía Torres|-|email=lucia.torres@banco-ejemplo.test; cargo=Líder de plataformas
+   pertenece_a> UO-001
+   reporta_a> PER-004
+   tiene_rol> ROL-001
+   es_experto_en> PLT-001
+   es_dueno_de> PLT-001, PLT-002, PLT-003, APP-002, APP-003
+PER-004|Persona|Mateo Vargas|-|email=mateo.vargas@banco-ejemplo.test; cargo=Vicepresidente de Tecnología
+   pertenece_a> UO-001
+   es_dueno_de> APP-001, DAT-001, DAT-002, DAT-003, CAP-100, CAP-200
+   aprueba> ADR-005
+ROL-001|Rol|Miembro del ARB|-|alcance=Revisa solicitudes de arquitectura en el sprint
+## catalogos/negocio.json (workspace negocio)
+CAP-100|CapacidadNegocio|Pagos|-|nivel=1; criticidad=tier-1
+CAP-110|CapacidadNegocio|Pagos inmediatos|CAP-100|nivel=2; criticidad=tier-1
+   es_realizada_por> APP-002, PRC-002
+CAP-200|CapacidadNegocio|Gestión de clientes y cuentas|-|nivel=1; criticidad=tier-1
+CAP-210|CapacidadNegocio|Vinculación digital de clientes|CAP-200|nivel=2; criticidad=tier-2
+   es_realizada_por> APP-004, PRC-001
+CAP-220|CapacidadNegocio|Mantenimiento de cuentas|CAP-200|nivel=2; criticidad=tier-1
+   es_realizada_por> APP-003
+CAP-300|CapacidadNegocio|Crédito|-|nivel=1; criticidad=tier-2
+CAP-310|CapacidadNegocio|Originación de crédito de consumo|CAP-300|nivel=2; criticidad=tier-2
+   es_realizada_por> APP-005, APP-006
+PRC-001|Proceso|Abrir cuenta de ahorros digital|-|nivel=1
+   usa> APP-004, APP-003
+PRC-002|Proceso|Enviar pago inmediato desde el móvil|-|nivel=1
+   usa> APP-001, APP-002
+## catalogos/aplicaciones.json (workspace aplicaciones)
+APP-001|Aplicacion|Banca Móvil|-|criticidad=tier-1; rto_min=60; rpo_min=5; fase_ciclo_vida=en_produccion; time=invertir; regulacion=SFC-CE-007-2018,SFC-CE-005-2019,LEY-1581-2012; tipo_desarrollo=propio
+   esta_sujeta_a> NOR-001
+MOD-001|ModuloAplicacion|bff-movil|APP-001|tipo_modulo=bff; fase_ciclo_vida=en_produccion
+   es_soportado_por> ENT-002(rol_soporte=ejecucion)
+   se_conecta_a> API-001(tipo_solicitud=lectura_escritura critica=true), API-003(tipo_solicitud=lectura critica=true)
+APP-002|Aplicacion|Pagos Inmediatos|-|criticidad=tier-1; rto_min=30; rpo_min=0; fase_ciclo_vida=en_produccion; time=invertir; regulacion=SFC-CE-007-2018,LEY-1581-2012; tipo_desarrollo=propio
+   esta_sujeta_a> NOR-001
+MOD-002|ModuloAplicacion|pagos-orquestador|APP-002|tipo_modulo=microservicio; fase_ciclo_vida=en_produccion
+   es_soportado_por> ENT-001(rol_soporte=ejecucion), BDD-002(rol_soporte=persistencia), TPR-001(rol_soporte=otro)
+   se_conecta_a> API-003(tipo_solicitud=lectura_escritura critica=true)
+   implementa> ARQ-001
+MOD-006|ModuloAplicacion|pagos-conciliacion|APP-002|tipo_modulo=batch; fase_ciclo_vida=en_produccion
+   es_soportado_por> ENT-001(rol_soporte=ejecucion), BDD-002(rol_soporte=persistencia), TPR-001(rol_soporte=otro)
+   implementa> ARQ-002
+APP-003|Aplicacion|Core Bancario|-|criticidad=tier-1; rto_min=30; rpo_min=0; fase_ciclo_vida=en_produccion; time=tolerar; regulacion=SFC-CE-007-2018,LEY-1581-2012; tipo_desarrollo=paquete
+   esta_sujeta_a> NOR-001, NOR-003
+MOD-004|ModuloAplicacion|core-cuentas|APP-003|tipo_modulo=microservicio; fase_ciclo_vida=en_produccion
+   es_soportado_por> ENT-001(rol_soporte=ejecucion), BDD-001(rol_soporte=persistencia)
+MOD-005|ModuloAplicacion|openbanking-adaptador|APP-003|tipo_modulo=adaptador; fase_ciclo_vida=en_produccion
+   es_soportado_por> ENT-001(rol_soporte=ejecucion), TPR-001(rol_soporte=otro)
+   se_conecta_a> API-003(tipo_solicitud=lectura critica=true)
+   implementa> ARQ-003
+APP-004|Aplicacion|Onboarding Digital|-|criticidad=tier-2; rto_min=120; rpo_min=15; fase_ciclo_vida=en_produccion; time=invertir; regulacion=LEY-1581-2012,SFC-CE-005-2019; tipo_desarrollo=propio
+   esta_sujeta_a> NOR-003
+MOD-003|ModuloAplicacion|onboarding-kyc|APP-004|tipo_modulo=microservicio; fase_ciclo_vida=en_produccion
+   es_soportado_por> ENT-002(rol_soporte=ejecucion)
+   se_conecta_a> API-003(tipo_solicitud=lectura_escritura critica=true)
+APP-005|Aplicacion|Originación de Crédito (legado)|-|criticidad=tier-2; rto_min=480; rpo_min=60; fase_ciclo_vida=en_produccion; time=migrar; regulacion=LEY-1581-2012; tipo_desarrollo=propio
+   es_soportado_por> ENT-001(rol_soporte=ejecucion), TPR-002(rol_soporte=otro)
+   se_conecta_a> API-003(tipo_solicitud=lectura critica=true)
+   implementa> ARQ-002
+   es_reemplazada_por> APP-006
+   esta_sujeta_a> TEC-001
+APP-006|Aplicacion|Plataforma de Crédito Digital|-|criticidad=tier-2; rto_min=240; rpo_min=15; fase_ciclo_vida=en_implementacion; regulacion=LEY-1581-2012; tipo_desarrollo=propio
+   es_soportado_por> ENT-003(rol_soporte=ejecucion), BDD-003(rol_soporte=persistencia)
+   se_conecta_a> API-003(tipo_solicitud=lectura critica=false)
+   esta_sujeta_a> NOR-003, NUB-002
+API-001|API|API Pagos Inmediatos v1|MOD-002|expuesta_a=canales; autenticacion=oauth2; via_gateway=true; version=v1
+   provee> DAT-002
+   esta_sujeta_a> SEG-001
+API-002|API|API Open Banking Cuentas|MOD-005|expuesta_a=terceros; autenticacion=oauth2; via_gateway=true; version=v1
+   provee> DAT-003, DAT-001
+   esta_sujeta_a> SEG-001, SEG-002
+API-003|API|API Core de Cuentas (interna)|MOD-004|expuesta_a=interna; autenticacion=mtls; via_gateway=false; version=v3
+   provee> DAT-003
+API-004|API|API Vinculación de Clientes|MOD-003|expuesta_a=canales; autenticacion=oidc; via_gateway=true; version=v1
+   provee> DAT-001
+IFZ-001|Interfaz|Evento crédito aprobado|APP-006|tipo_interfaz=evento
+   provee> DAT-004
+## catalogos/datos.json (workspace datos)
+DOM-001|DominioDatos|Clientes|-|-
+DOM-002|DominioDatos|Pagos y saldos|-|-
+DAT-001|EntidadDatos|Datos personales de clientes|DOM-001|clasificacion=restringida; datos_personales=true
+   esta_sujeta_a> NOR-003
+DAT-002|EntidadDatos|Orden de pago|DOM-002|clasificacion=confidencial; datos_personales=false
+DAT-003|EntidadDatos|Saldos y movimientos de cuentas|DOM-002|clasificacion=confidencial; datos_personales=true
+   esta_sujeta_a> NOR-003
+DAT-004|EntidadDatos|Solicitud de crédito|DOM-001|clasificacion=confidencial; datos_personales=true
+   esta_sujeta_a> NOR-003
+## catalogos/tecnologia.json (workspace tecnologia)
+PLT-001|Plataforma|OpenShift on-premise|-|tipo_plataforma=on_premise; proveedor=Red Hat
+PLT-002|Plataforma|AWS|-|tipo_plataforma=nube_publica; proveedor=Amazon; region=sa-east-1
+   esta_sujeta_a> NUB-002
+PLT-003|Plataforma|GCP|-|tipo_plataforma=nube_publica; proveedor=Google; region=southamerica-east1
+   esta_sujeta_a> NUB-002
+ENT-001|Entorno|OpenShift Producción|PLT-001|tipo_entorno=produccion
+ENT-002|Entorno|AWS Producción|PLT-002|tipo_entorno=produccion
+ENT-003|Entorno|GCP Producción|PLT-003|tipo_entorno=produccion
+BDD-001|BaseDatos|core-db|-|motor=Oracle; cifrado_reposo=true
+   es_soportado_por> ENT-001
+   almacena> DAT-003
+BDD-002|BaseDatos|pagos-db|-|motor=PostgreSQL; cifrado_reposo=true
+   es_soportado_por> ENT-001
+   almacena> DAT-002
+BDD-003|BaseDatos|credito-db|-|motor=Cloud SQL; cifrado_reposo=true
+   es_soportado_por> ENT-003
+   almacena> DAT-004
+TPR-001|ProductoTecnologico|Java 21|-|estado_estandar=aprobado; version=21
+TPR-002|ProductoTecnologico|Java 8|-|estado_estandar=obsoleto; version=8
+   es_reemplazada_por> TPR-001
+## catalogos/gobierno.json (workspace gobierno)
+NOR-001|Norma|SFC CE 007/2018|-|autoridad=Superintendencia Financiera de Colombia; descripcion=Requerimientos mínimos de seguridad y calidad
+NOR-002|Norma|SFC CE 005/2019|-|autoridad=Superintendencia Financiera de Colombia; descripcion=Uso de servicios de computación en la nube
+NOR-003|Norma|Ley 1581 de 2012|-|autoridad=Congreso de Colombia; descripcion=Protección de datos personales
+NOR-004|Norma|Política interna de arquitectura (ficticia)|-|autoridad=Banco Ejemplo
+SEG-001|Regla|APIs expuestas autenticadas y vía gateway|-|categoria=seguridad; enunciado=Toda API expuesta a canales o terceros se publica por el gateway con OAuth2 u OIDC
+   deriva_de> NOR-001, NOR-004
+SEG-002|Regla|mTLS para APIs a terceros|-|categoria=seguridad; enunciado=Las APIs a terceros que entregan datos confidenciales o restringidos exigen mTLS
+   deriva_de> NOR-001
+NUB-002|Regla|Cargas en nube pública declaran CE 005/2019|-|categoria=nube; enunciado=Toda aplicación en nube pública declara la regulación SFC-CE-005-2019 y la región
+   deriva_de> NOR-002
+TEC-001|Regla|Productos obsoletos o prohibidos solo con waiver|-|categoria=tecnologia; enunciado=Un producto obsoleto o prohibido solo se usa con un waiver vigente
+   deriva_de> NOR-004
+   mitiga> RSG-001
+ADR-001|ADR|Microservicios REST sobre OpenShift|-|estado=aceptado; fecha=2026-02-10
+   decide_sobre> APP-001, APP-002, APP-004, PLT-001
+ADR-002|ADR|Exposición de APIs a terceros con mTLS|-|estado=aceptado; fecha=2026-03-05
+   decide_sobre> API-002
+ADR-003|ADR|Modernización del Core Bancario|-|estado=propuesto; fecha=2026-09-15
+   decide_sobre> APP-003
+   mitiga> RSG-001
+ADR-004|ADR|Crédito Digital en GCP|-|estado=propuesto; fecha=2026-10-01
+   decide_sobre> APP-006, PLT-003
+ADR-005|ADR|Retiro gradual del crédito legado|-|estado=aceptado; fecha=2026-04-20
+   decide_sobre> APP-005
+ADR-006|ADR|Procesamiento batch nocturno en OpenShift|-|estado=aceptado; fecha=2026-05-12
+RSG-001|Riesgo|Obsolescencia del Core Bancario|-|severidad=alta
+   afecta_a> APP-003
+WVR-001|Waiver|Java 8 en el crédito legado|-|vence=2027-03-31; justificacion=La migración a Java 21 depende del retiro del crédito legado; plan_remediacion=Retirar APP-005 cuando APP-006 entre en producción
+   exceptua> TEC-001
+   se_otorga_a> APP-005
+SOL-001|SolicitudARB|Revisión de Crédito Digital en GCP|-|estado=en_revision; sprint=Sprint 42
+   evalua> APP-006
+   produce> ADR-004
+ARQ-001|Arquetipo|Microservicio REST en OpenShift|-|version=2.1; estado=aprobado; caso_uso=Microservicio REST síncrono de misión crítica desplegado en OpenShift; criticidad_maxima_soportada=tier-1; rto_base_min=30; rpo_base_min=0
+   deriva_de> ADR-001
+   se_despliega_en> PLT-001
+   usa> TPR-001
+   cumple> SEG-001, TEC-001
+ARQ-002|Arquetipo|Batch nocturno|-|version=1.0; estado=aprobado; caso_uso=Proceso batch nocturno de conciliación o carga; criticidad_maxima_soportada=tier-2; rto_base_min=480; rpo_base_min=60
+   deriva_de> ADR-006
+   se_despliega_en> PLT-001
+   usa> TPR-001
+   cumple> TEC-001
+ARQ-003|Arquetipo|API de exposición a terceros|-|version=1.0; estado=deprecado; caso_uso=API REST expuesta a terceros (v1, reemplazada por una versión con mTLS obligatorio); criticidad_maxima_soportada=tier-1; rto_base_min=30; rpo_base_min=0
+   deriva_de> ADR-002
+   se_despliega_en> PLT-001
+   usa> TPR-001
+   cumple> SEG-001, SEG-002
+</catalogo>
 
-  <!-- 1 PROBLEMA -->
-  <section class="slide" id="s1">
-    <span class="etiqueta">1 · El problema</span>
-    <h2>Hoy la arquitectura vive <em>dispersa</em></h2>
-    <p class="sub">Decidir bien exige saber qué se conecta con qué. Esa información está repartida y no se puede consultar.</p>
-    <div class="dos">
-      <div class="tarjeta"><h3>Hoy</h3>
-        <ul class="lista" id="listaHoy"></ul></div>
-      <div class="tarjeta roja"><h3>Con el metamodelo</h3>
-        <ul class="lista" id="listaCon"></ul></div>
-    </div>
-    <div class="franja" id="franja">Preparar una revisión del ARB:
-      <span><b id="cifraAntes"></b></span> <span style="color:var(--rojo)">→</span> <span><b id="cifraDespues"></b></span>
-      <small>cifras ilustrativas</small></div>
-  </section>
-
-  <!-- 2 ESTRUCTURA -->
-  <section class="slide" id="s2">
-    <span class="etiqueta">2 · Qué estructuramos</span>
-    <h2>Un lenguaje común para <em>todo</em> el banco</h2>
-    <div class="cifras" id="cifras2"></div>
-    <div class="estructura">
-      <div class="areas" id="areas"></div>
-      <div class="detalle" id="detalle"></div>
-    </div>
-  </section>
-
-  <!-- 3 MAPA VIVO -->
-  <section class="slide" id="s3">
-    <div class="controles">
-      <span class="etiqueta" style="margin:0;font-size:16px;letter-spacing:1.5px">3 · Mapa vivo</span>
-      <span style="font-size:24px;font-weight:700">¿Qué pasa si cae…?</span>
-      <button class="btn" data-cae="PLT-002">☁ AWS</button>
-      <button class="btn" data-cae="PLT-001">⚙ OpenShift</button>
-      <button class="btn" data-cae="PLT-003">☁ GCP</button>
-      <button class="btn suave" id="btnComparar">Comparar</button>
-      <button class="btn suave" id="btnReiniciar">Reiniciar</button>
-      <span class="espacio"></span>
-      <div class="marcador"><div><b id="mTot">0</b><span>componentes</span></div><div><b id="mApp">0</b><span>aplicaciones</span></div><div><b id="mCap">0</b><span>capacidades</span></div></div>
-    </div>
-    <svg id="mapa" viewBox="0 0 1500 740"></svg>
-    <div class="leyenda" style="margin-top:2px">
-      <span><i style="background:var(--rojo)"></i>Caído</span><span><i style="background:var(--ambar)"></i>Degradado</span>
-      <span><i style="background:#fff"></i>Sin afectación</span><span style="margin-left:auto">Haz clic en un componente afectado para ver el porqué, o en cualquiera para simular su caída</span>
-    </div>
-    <div class="porque" id="porque"></div>
-    <div class="comparar" id="comparar"></div>
-  </section>
-
-  <!-- 4 VALOR -->
-  <section class="slide" id="s4">
-    <span class="etiqueta">4 · El valor para el ARB</span>
-    <h2>La solicitud llega con los <em>hechos</em> y un semáforo</h2>
-    <div class="arb">
-      <div class="solicitud" id="solicitud"></div>
-      <div class="reglas" id="reglas">
-        <h3>14 reglas de consistencia</h3>
-        <div class="semaforo" id="semaforo"></div>
-        <div id="listaReglas"></div>
-        <div class="banco" id="banco"></div>
-      </div>
-    </div>
-    <div style="margin-top:12px;display:flex;gap:14px">
-      <button class="btn rojo" id="btnBanco">Ver el estado de todo el banco</button>
-      <button class="btn suave" id="btnVolverSol" style="display:none">Volver a la solicitud</button>
-    </div>
-  </section>
-
-  <!-- 5 CIERRE -->
-  <section class="slide" id="s5">
-    <span class="etiqueta">Lo que logramos</span>
-    <div class="frase" id="frase"></div>
-    <div class="grandes">
-      <div class="grande"><b data-n="71">0</b><span>componentes conectados</span></div>
-      <div class="grande"><b data-n="142">0</b><span>relaciones con significado</span></div>
-      <div class="grande"><b data-n="14">0</b><span>reglas que se evalúan solas</span></div>
-    </div>
-    <div class="valor">
-      <div><strong>Decisiones más rápidas</strong>El ARB recibe hechos con ID citables y un semáforo, no documentos para leer.</div>
-      <div><strong>Riesgo a la vista</strong>Concentración de riesgo y dependencias visibles antes del incidente, no durante.</div>
-      <div><strong>Cumplimiento trazable</strong>SFC CE 007/2018, CE 005/2019 y Ley 1581 conectadas a las aplicaciones que les aplican.</div>
-    </div>
-    <p class="paso"><b style="color:var(--rojo)">Siguiente paso propuesto:</b> piloto con un dominio de 20 a 30 aplicaciones reales, ajustando listas y escalas a las propias.</p>
-  </section>
-
-  <div class="pie"><span>Datos ficticios · Banco Ejemplo</span><span>← → navegar · F pantalla completa · N notas</span></div>
-  <div id="notas"></div>
-</div>
-
-<script>
-'use strict';
-// Motor de la demostración: propagación de impacto y contexto de una aplicación.
-// Corre igual en el navegador (se incrusta en la página) y en Node (pruebas). Sin dependencias.
-(function (raiz) {
-  var RANGO = { caido: 2, degradado: 1 };
-
-  function indexar(g) {
-    var sal = {}, ent = {}, hijos = {}, id;
-    g.referencias.forEach(function (r) {
-      (sal[r.origen] = sal[r.origen] || []).push(r);
-      (ent[r.destino] = ent[r.destino] || []).push(r);
-    });
-    for (id in g.componentes) {
-      var p = g.componentes[id].padre;
-      if (p) (hijos[p] = hijos[p] || []).push(id);
-    }
-    return { sal: sal, ent: ent, hijos: hijos };
-  }
-
-  // Propagación por rondas síncronas: en cada ronda solo se mira el estado de la ronda anterior,
-  // así cada componente sabe en qué ronda cayó (sirve para animar la "ola").
-  // Devuelve { estado: {id: 'caido'|'degradado'}, ronda: {id: n}, causa: {id: {via, rel}} }.
-  function impacto(g, mm, origen) {
-    var ix = indexar(g);
-    var prop = mm.propagacion_impacto;
-    var deps = prop.dependencias.referencias;
-    var atenuante = prop.dependencias.campo_atenuante;
-    var realiza = prop.realizacion.referencias;
-    var arrastran = prop.jerarquia.arrastran_hijos;
-    var estado = {}, ronda = {}, causa = {};
-    estado[origen] = 'caido'; ronda[origen] = 0; causa[origen] = { via: null, rel: 'origen' };
-
-    for (var n = 1; n < 100; n++) {
-      var prev = Object.assign({}, estado), cambios = {};
-      var proponer = function (id, nuevo, via, rel) {
-        if (RANGO[nuevo] <= (RANGO[prev[id]] || 0)) return;
-        if (cambios[id] && RANGO[cambios[id].nuevo] >= RANGO[nuevo]) return;
-        cambios[id] = { nuevo: nuevo, via: via, rel: rel };
-      };
-      g.referencias.forEach(function (r) {
-        if (deps.indexOf(r.tipo) >= 0 && prev[r.destino]) {
-          var nuevo = prev[r.destino];
-          if (r.campos && r.campos[atenuante] === false) nuevo = 'degradado';
-          proponer(r.origen, nuevo, r.destino, r.tipo);
-        }
-      });
-      Object.keys(g.componentes).forEach(function (id) {
-        var realizadores = (ix.sal[id] || []).filter(function (r) { return realiza.indexOf(r.tipo) >= 0; })
-          .map(function (r) { return r.destino; });
-        var afectados = realizadores.filter(function (x) { return prev[x]; });
-        if (afectados.length) {
-          var todos = afectados.length === realizadores.length && afectados.every(function (x) { return prev[x] === 'caido'; });
-          proponer(id, todos ? 'caido' : 'degradado', afectados[0], 'es_realizada_por');
-        }
-      });
-      Object.keys(ix.hijos).forEach(function (pid) {
-        var hs = ix.hijos[pid];
-        if (prev[pid] === 'caido' && arrastran.indexOf(g.componentes[pid].tipo) >= 0)
-          hs.forEach(function (h) { proponer(h, 'caido', pid, 'hijo_de'); });
-        if (prop.jerarquia.hijo_afecta_padre) {
-          var af = hs.filter(function (h) { return prev[h]; });
-          if (af.length) {
-            var todosH = af.length === hs.length && af.every(function (h) { return prev[h] === 'caido'; });
-            proponer(pid, todosH ? 'caido' : 'degradado', af[0], 'tiene_hijo');
-          }
-        }
-      });
-      var ids = Object.keys(cambios);
-      if (!ids.length) break;
-      ids.forEach(function (id) {
-        estado[id] = cambios[id].nuevo; ronda[id] = n; causa[id] = { via: cambios[id].via, rel: cambios[id].rel };
-      });
-    }
-    return { estado: estado, ronda: ronda, causa: causa };
-  }
-
-  function ancestro(g, id, tipo) {
-    var actual = id;
-    while (actual) {
-      if (g.componentes[actual].tipo === tipo) return actual;
-      actual = g.componentes[actual].padre;
-    }
-    return null;
-  }
-
-  // Hechos de una aplicación para el ARB (mismas reglas que validar.js --contexto).
-  function contexto(g, app) {
-    var ix = indexar(g);
-    var comp = g.componentes;
-    var destinos = function (id, rt, tipo) { return (ix.sal[id] || []).filter(function (r) { return r.tipo === rt && (!tipo || comp[r.destino].tipo === tipo); }).map(function (r) { return r.destino; }); };
-    var origenes = function (id, rt, tipo) { return (ix.ent[id] || []).filter(function (r) { return r.tipo === rt && (!tipo || comp[r.origen].tipo === tipo); }).map(function (r) { return r.origen; }); };
-    var propios = [app].concat(ix.hijos[app] || []);
-    var entornos = [], bdds = [], deps = [];
-    propios.forEach(function (x) {
-      entornos = entornos.concat(destinos(x, 'es_soportado_por', 'Entorno'));
-      bdds = bdds.concat(destinos(x, 'es_soportado_por', 'BaseDatos'));
-      (ix.sal[x] || []).forEach(function (r) {
-        if (r.tipo !== 'se_conecta_a') return;
-        var otra = ancestro(g, r.destino, 'Aplicacion');
-        if (otra && otra !== app && !deps.some(function (d) { return d.app === otra; }))
-          deps.push({ app: otra, critica: !(r.campos && r.campos.critica === false) });
-      });
-    });
-    var uniq = function (a) { return a.filter(function (x, i) { return a.indexOf(x) === i; }); };
-    entornos = uniq(entornos);
-    var datos = uniq(bdds.reduce(function (a, b) { return a.concat(destinos(b, 'almacena', 'EntidadDatos')); }, [])).sort();
-    var nube = entornos.some(function (e) { return comp[comp[e].padre].campos.tipo_plataforma === 'nube_publica'; });
-    var inferida = [];
-    if (nube) inferida.push('SFC-CE-005-2019');
-    if (datos.some(function (d) { return comp[d].campos.datos_personales; })) inferida.push('LEY-1581-2012');
-    var declarada = comp[app].campos.regulacion || [];
-    return {
-      app: app,
-      duenos: origenes(app, 'es_dueno_de', 'Persona'),
-      capacidades: origenes(app, 'es_realizada_por', 'CapacidadNegocio'),
-      entornos: entornos.map(function (e) { return { id: e, nube: comp[comp[e].padre].campos.tipo_plataforma === 'nube_publica' }; }),
-      datos: datos,
-      dependencias: deps,
-      declarada: declarada,
-      faltan: inferida.filter(function (x) { return declarada.indexOf(x) < 0; }).sort(),
-      adrs: origenes(app, 'decide_sobre', 'ADR'),
-      waivers: origenes(app, 'se_otorga_a', 'Waiver')
-    };
-  }
-
-  var API = { impacto: impacto, contexto: contexto, ancestro: ancestro };
-  if (typeof module !== 'undefined' && module.exports) module.exports = API; else raiz.Motor = API;
-})(typeof window !== 'undefined' ? window : this);
-
-</script>
-<script>
-const DATOS = {"mm":{"workspaces":{"organizacion":{"descripcion":"Organización, unidades, personas y roles","dueno_sugerido":"Oficina de Arquitectura Empresarial","archivo":"catalogos/organizacion.yaml"},"negocio":{"descripcion":"Capacidades de negocio y procesos","dueno_sugerido":"Arquitectura de Negocio","archivo":"catalogos/negocio.yaml"},"aplicaciones":{"descripcion":"Aplicaciones, módulos, APIs e interfaces","dueno_sugerido":"Arquitectura de Aplicaciones","archivo":"catalogos/aplicaciones.yaml"},"datos":{"descripcion":"Dominios y entidades de datos","dueno_sugerido":"Gobierno de Datos","archivo":"catalogos/datos.yaml"},"tecnologia":{"descripcion":"Plataformas, entornos, bases de datos y productos tecnológicos","dueno_sugerido":"Arquitectura de Infraestructura","archivo":"catalogos/tecnologia.yaml"},"gobierno":{"descripcion":"Normas, reglas ARB, ADR, riesgos, waivers, solicitudes y arquetipos","dueno_sugerido":"ARB (Architecture Review Board)","archivo":"catalogos/gobierno.yaml"}},"propagacion_impacto":{"dependencias":{"referencias":["es_soportado_por","se_conecta_a","usa"],"campo_atenuante":"critica"},"realizacion":{"referencias":["es_realizada_por"],"modo":"inversa_si_todos"},"jerarquia":{"arrastran_hijos":["Plataforma","Aplicacion","ModuloAplicacion"],"hijo_afecta_padre":true}},"tipos_componente":{"Organizacion":{"workspace":"organizacion","padres":[],"origen":"[Referencia] Organization","campos":{"pais":{"obligatorio":false}}},"UnidadOrganizacional":{"workspace":"organizacion","padres":["Organizacion","UnidadOrganizacional"],"origen":"[Referencia] Organizational Unit","campos":{"tipo_unidad":{"obligatorio":false}}},"Persona":{"workspace":"organizacion","padres":[],"origen":"[Referencia] Person (Contact Email obligatorio para recibir encuestas)","campos":{"email":{"obligatorio":true},"cargo":{"obligatorio":false}}},"Rol":{"workspace":"organizacion","padres":[],"origen":"[Propio]","campos":{"alcance":{"obligatorio":false}}},"CapacidadNegocio":{"workspace":"negocio","padres":["CapacidadNegocio"],"origen":"[Referencia] Business Capability (L1..L3)","campos":{"nivel":{"obligatorio":true},"criticidad":{"obligatorio":false}}},"Proceso":{"workspace":"negocio","padres":["Proceso"],"origen":"[Propio]","campos":{"nivel":{"obligatorio":true}}},"Aplicacion":{"workspace":"aplicaciones","padres":[],"origen":"[Referencia] Application","campos":{"criticidad":{"obligatorio":true},"rto_min":{"obligatorio":false},"rpo_min":{"obligatorio":false},"fase_ciclo_vida":{"obligatorio":true},"fecha_retiro":{"obligatorio":false},"time":{"obligatorio":false},"regulacion":{"obligatorio":false},"tipo_desarrollo":{"obligatorio":true},"codigo_cmdb":{"obligatorio":false}}},"ModuloAplicacion":{"workspace":"aplicaciones","padres":["Aplicacion"],"origen":"[Referencia] Application Module","campos":{"tipo_modulo":{"obligatorio":true},"fase_ciclo_vida":{"obligatorio":true}}},"API":{"workspace":"aplicaciones","padres":["Aplicacion","ModuloAplicacion"],"origen":"[Propio] especialización de Interface","campos":{"expuesta_a":{"obligatorio":true},"autenticacion":{"obligatorio":true},"via_gateway":{"obligatorio":true},"version":{"obligatorio":false},"p99_ms":{"obligatorio":false}}},"Interfaz":{"workspace":"aplicaciones","padres":["Aplicacion","ModuloAplicacion"],"origen":"[Referencia] Interface","campos":{"tipo_interfaz":{"obligatorio":true}}},"DominioDatos":{"workspace":"datos","padres":[],"origen":"[Propio]","campos":{}},"EntidadDatos":{"workspace":"datos","padres":["DominioDatos"],"origen":"[Referencia] Data Entity","campos":{"clasificacion":{"obligatorio":true},"datos_personales":{"obligatorio":true}}},"Plataforma":{"workspace":"tecnologia","padres":[],"origen":"[Propio]","campos":{"tipo_plataforma":{"obligatorio":true},"proveedor":{"obligatorio":false},"region":{"obligatorio":false}}},"Entorno":{"workspace":"tecnologia","padres":["Plataforma"],"origen":"[Propio]","campos":{"tipo_entorno":{"obligatorio":true}}},"BaseDatos":{"workspace":"tecnologia","padres":[],"origen":"[Referencia] Data Store, reubicado en tecnología","campos":{"motor":{"obligatorio":false},"cifrado_reposo":{"obligatorio":true}}},"ProductoTecnologico":{"workspace":"tecnologia","padres":[],"origen":"[Propio]","campos":{"estado_estandar":{"obligatorio":true},"version":{"obligatorio":false}}},"Norma":{"workspace":"gobierno","padres":["Norma"],"origen":"[Propio]","campos":{"autoridad":{"obligatorio":false}}},"Regla":{"workspace":"gobierno","padres":[],"origen":"[Propio] = catálogo ARB","campos":{"categoria":{"obligatorio":true},"enunciado":{"obligatorio":true}}},"ADR":{"workspace":"gobierno","padres":[],"origen":"[Propio]","campos":{"estado":{"obligatorio":true},"fecha":{"obligatorio":true}}},"Riesgo":{"workspace":"gobierno","padres":[],"origen":"[Propio]","campos":{"severidad":{"obligatorio":true}}},"Waiver":{"workspace":"gobierno","padres":[],"origen":"[Propio]","campos":{"vence":{"obligatorio":true},"justificacion":{"obligatorio":true},"plan_remediacion":{"obligatorio":true}}},"SolicitudARB":{"workspace":"gobierno","padres":[],"origen":"[Propio]","campos":{"estado":{"obligatorio":true},"sprint":{"obligatorio":false}}},"Arquetipo":{"workspace":"gobierno","padres":[],"origen":"[Propio] solución de referencia aprobada y reutilizable (diseño propio, sin equivalente en las plataformas de referencia)","campos":{"version":{"obligatorio":true},"estado":{"obligatorio":true},"caso_uso":{"obligatorio":true},"criticidad_maxima_soportada":{"obligatorio":true},"rto_base_min":{"obligatorio":true},"rpo_base_min":{"obligatorio":true}}}},"tipos_referencia":{"pertenece_a":{"frase":"{o} pertenece a {d}","triples":[{"origen":"Persona","destino":"UnidadOrganizacional","salida":{"min":1,"max":1}}]},"reporta_a":{"frase":"{o} reporta a {d}","triples":[{"origen":"Persona","destino":"Persona","salida":{"max":1}}]},"es_dueno_de":{"frase":"{o} es dueño de {d}","triples":[{"origen":"Persona","destino":"Aplicacion","entrada":{"min":1,"max":1}},{"origen":"Persona","destino":"CapacidadNegocio"},{"origen":"Persona","destino":"EntidadDatos","entrada":{"min":1,"max":1}},{"origen":"Persona","destino":"UnidadOrganizacional"},{"origen":"Persona","destino":"Plataforma","entrada":{"min":1,"max":1}},{"origen":"Persona","destino":"Riesgo","entrada":{"min":1,"max":1}},{"origen":"Persona","destino":"Arquetipo","entrada":{"min":1,"max":1}}]},"es_experto_en":{"frase":"{o} es experto en {d}","triples":[{"origen":"Persona","destino":"Aplicacion"},{"origen":"Persona","destino":"Plataforma"}]},"tiene_rol":{"frase":"{o} tiene el rol {d}","triples":[{"origen":"Persona","destino":"Rol"}]},"consume":{"frase":"{o} consume {d}","triples":[{"origen":"UnidadOrganizacional","destino":"Aplicacion"}]},"es_realizada_por":{"frase":"{o} es realizada por {d}","triples":[{"origen":"CapacidadNegocio","destino":"Aplicacion"},{"origen":"CapacidadNegocio","destino":"Proceso"}]},"usa":{"frase":"{o} usa {d}","triples":[{"origen":"Proceso","destino":"Aplicacion","salida":{"min":1}},{"origen":"Arquetipo","destino":"ProductoTecnologico"}]},"es_soportado_por":{"frase":"{o} es soportado por {d}","triples":[{"origen":"Aplicacion","destino":"Entorno"},{"origen":"Aplicacion","destino":"BaseDatos"},{"origen":"Aplicacion","destino":"ProductoTecnologico"},{"origen":"ModuloAplicacion","destino":"Entorno","salida":{"min":1}},{"origen":"ModuloAplicacion","destino":"BaseDatos"},{"origen":"ModuloAplicacion","destino":"ProductoTecnologico"},{"origen":"BaseDatos","destino":"Entorno","salida":{"min":1,"max":2}}]},"se_conecta_a":{"frase":"{o} se conecta a {d}","triples":[{"origen":"Aplicacion","destino":"API"},{"origen":"Aplicacion","destino":"Interfaz"},{"origen":"ModuloAplicacion","destino":"API"},{"origen":"ModuloAplicacion","destino":"Interfaz"}]},"provee":{"frase":"{o} provee {d}","triples":[{"origen":"API","destino":"EntidadDatos"},{"origen":"Interfaz","destino":"EntidadDatos"}]},"almacena":{"frase":"{o} almacena {d}","triples":[{"origen":"BaseDatos","destino":"EntidadDatos"}]},"es_reemplazada_por":{"frase":"{o} es reemplazada por {d}","triples":[{"origen":"Aplicacion","destino":"Aplicacion","salida":{"max":1}},{"origen":"ProductoTecnologico","destino":"ProductoTecnologico","salida":{"max":1}}]},"esta_sujeta_a":{"frase":"{o} está sujeta a {d}","triples":[{"origen":"Aplicacion","destino":"Norma"},{"origen":"Aplicacion","destino":"Regla"},{"origen":"API","destino":"Regla"},{"origen":"Plataforma","destino":"Regla"},{"origen":"EntidadDatos","destino":"Norma"}]},"deriva_de":{"frase":"{o} deriva de {d}","triples":[{"origen":"Regla","destino":"Norma","salida":{"min":1}},{"origen":"Arquetipo","destino":"ADR","salida":{"min":1}}]},"decide_sobre":{"frase":"{o} decide sobre {d}","triples":[{"origen":"ADR","destino":"Aplicacion"},{"origen":"ADR","destino":"ModuloAplicacion"},{"origen":"ADR","destino":"API"},{"origen":"ADR","destino":"Plataforma"},{"origen":"ADR","destino":"ProductoTecnologico"}]},"reemplaza_adr":{"frase":"{o} reemplaza a {d}","triples":[{"origen":"ADR","destino":"ADR","salida":{"max":1}}]},"afecta_a":{"frase":"{o} afecta a {d}","triples":[{"origen":"Riesgo","destino":"Aplicacion"},{"origen":"Riesgo","destino":"CapacidadNegocio"},{"origen":"Riesgo","destino":"Plataforma"}]},"mitiga":{"frase":"{o} mitiga {d}","triples":[{"origen":"Regla","destino":"Riesgo"},{"origen":"ADR","destino":"Riesgo"}]},"exceptua":{"frase":"{o} exceptúa {d}","triples":[{"origen":"Waiver","destino":"Regla"},{"origen":"Waiver","destino":"Arquetipo"}]},"implementa":{"frase":"{o} implementa {d}","triples":[{"origen":"Aplicacion","destino":"Arquetipo","salida":{"max":1}},{"origen":"ModuloAplicacion","destino":"Arquetipo","salida":{"max":1}}]},"se_despliega_en":{"frase":"{o} se despliega en {d}","triples":[{"origen":"Arquetipo","destino":"Plataforma","salida":{"min":1}}]},"cumple":{"frase":"{o} cumple {d}","triples":[{"origen":"Arquetipo","destino":"Regla","salida":{"min":1}}]},"se_otorga_a":{"frase":"{o} se otorga a {d}","triples":[{"origen":"Waiver","destino":"Aplicacion","salida":{"min":1,"max":1}}]},"evalua":{"frase":"{o} evalúa {d}","triples":[{"origen":"SolicitudARB","destino":"Aplicacion"},{"origen":"SolicitudARB","destino":"ModuloAplicacion"},{"origen":"SolicitudARB","destino":"API"}]},"produce":{"frase":"{o} produce {d}","triples":[{"origen":"SolicitudARB","destino":"ADR"},{"origen":"SolicitudARB","destino":"Waiver"}]},"aprueba":{"frase":"{o} aprueba {d}","triples":[{"origen":"Persona","destino":"ADR"},{"origen":"Persona","destino":"Waiver","entrada":{"min":1}}]}}},"grafo":{"generado":"2026-10-21","modo_restricciones":"estricto","componentes":{"APP-001":{"id":"APP-001","tipo":"Aplicacion","workspace":"aplicaciones","nombre":"Banca Móvil","padre":null,"campos":{"criticidad":"tier-1","rto_min":60,"rpo_min":5,"fase_ciclo_vida":"en_produccion","time":"invertir","regulacion":["SFC-CE-007-2018","SFC-CE-005-2019","LEY-1581-2012"],"tipo_desarrollo":"propio"}},"MOD-001":{"id":"MOD-001","tipo":"ModuloAplicacion","workspace":"aplicaciones","nombre":"bff-movil","padre":"APP-001","campos":{"tipo_modulo":"bff","fase_ciclo_vida":"en_produccion"}},"APP-002":{"id":"APP-002","tipo":"Aplicacion","workspace":"aplicaciones","nombre":"Pagos Inmediatos","padre":null,"campos":{"criticidad":"tier-1","rto_min":30,"rpo_min":0,"fase_ciclo_vida":"en_produccion","time":"invertir","regulacion":["SFC-CE-007-2018","LEY-1581-2012"],"tipo_desarrollo":"propio"}},"MOD-002":{"id":"MOD-002","tipo":"ModuloAplicacion","workspace":"aplicaciones","nombre":"pagos-orquestador","padre":"APP-002","campos":{"tipo_modulo":"microservicio","fase_ciclo_vida":"en_produccion"}},"MOD-006":{"id":"MOD-006","tipo":"ModuloAplicacion","workspace":"aplicaciones","nombre":"pagos-conciliacion","padre":"APP-002","campos":{"tipo_modulo":"batch","fase_ciclo_vida":"en_produccion"}},"APP-003":{"id":"APP-003","tipo":"Aplicacion","workspace":"aplicaciones","nombre":"Core Bancario","padre":null,"campos":{"criticidad":"tier-1","rto_min":30,"rpo_min":0,"fase_ciclo_vida":"en_produccion","time":"tolerar","regulacion":["SFC-CE-007-2018","LEY-1581-2012"],"tipo_desarrollo":"paquete"}},"MOD-004":{"id":"MOD-004","tipo":"ModuloAplicacion","workspace":"aplicaciones","nombre":"core-cuentas","padre":"APP-003","campos":{"tipo_modulo":"microservicio","fase_ciclo_vida":"en_produccion"}},"MOD-005":{"id":"MOD-005","tipo":"ModuloAplicacion","workspace":"aplicaciones","nombre":"openbanking-adaptador","padre":"APP-003","campos":{"tipo_modulo":"adaptador","fase_ciclo_vida":"en_produccion"}},"APP-004":{"id":"APP-004","tipo":"Aplicacion","workspace":"aplicaciones","nombre":"Onboarding Digital","padre":null,"campos":{"criticidad":"tier-2","rto_min":120,"rpo_min":15,"fase_ciclo_vida":"en_produccion","time":"invertir","regulacion":["LEY-1581-2012","SFC-CE-005-2019"],"tipo_desarrollo":"propio"}},"MOD-003":{"id":"MOD-003","tipo":"ModuloAplicacion","workspace":"aplicaciones","nombre":"onboarding-kyc","padre":"APP-004","campos":{"tipo_modulo":"microservicio","fase_ciclo_vida":"en_produccion"}},"APP-005":{"id":"APP-005","tipo":"Aplicacion","workspace":"aplicaciones","nombre":"Originación de Crédito (legado)","padre":null,"campos":{"criticidad":"tier-2","rto_min":480,"rpo_min":60,"fase_ciclo_vida":"en_produccion","time":"migrar","regulacion":["LEY-1581-2012"],"tipo_desarrollo":"propio"}},"APP-006":{"id":"APP-006","tipo":"Aplicacion","workspace":"aplicaciones","nombre":"Plataforma de Crédito Digital","padre":null,"campos":{"criticidad":"tier-2","rto_min":240,"rpo_min":15,"fase_ciclo_vida":"en_implementacion","regulacion":["LEY-1581-2012"],"tipo_desarrollo":"propio"}},"API-001":{"id":"API-001","tipo":"API","workspace":"aplicaciones","nombre":"API Pagos Inmediatos v1","padre":"MOD-002","campos":{"expuesta_a":"canales","autenticacion":"oauth2","via_gateway":true,"version":"v1"}},"API-002":{"id":"API-002","tipo":"API","workspace":"aplicaciones","nombre":"API Open Banking Cuentas","padre":"MOD-005","campos":{"expuesta_a":"terceros","autenticacion":"oauth2","via_gateway":true,"version":"v1"}},"API-003":{"id":"API-003","tipo":"API","workspace":"aplicaciones","nombre":"API Core de Cuentas (interna)","padre":"MOD-004","campos":{"expuesta_a":"interna","autenticacion":"mtls","via_gateway":false,"version":"v3"}},"API-004":{"id":"API-004","tipo":"API","workspace":"aplicaciones","nombre":"API Vinculación de Clientes","padre":"MOD-003","campos":{"expuesta_a":"canales","autenticacion":"oidc","via_gateway":true,"version":"v1"}},"IFZ-001":{"id":"IFZ-001","tipo":"Interfaz","workspace":"aplicaciones","nombre":"Evento crédito aprobado","padre":"APP-006","campos":{"tipo_interfaz":"evento"}},"DOM-001":{"id":"DOM-001","tipo":"DominioDatos","workspace":"datos","nombre":"Clientes","padre":null,"campos":{}},"DOM-002":{"id":"DOM-002","tipo":"DominioDatos","workspace":"datos","nombre":"Pagos y saldos","padre":null,"campos":{}},"DAT-001":{"id":"DAT-001","tipo":"EntidadDatos","workspace":"datos","nombre":"Datos personales de clientes","padre":"DOM-001","campos":{"clasificacion":"restringida","datos_personales":true}},"DAT-002":{"id":"DAT-002","tipo":"EntidadDatos","workspace":"datos","nombre":"Orden de pago","padre":"DOM-002","campos":{"clasificacion":"confidencial","datos_personales":false}},"DAT-003":{"id":"DAT-003","tipo":"EntidadDatos","workspace":"datos","nombre":"Saldos y movimientos de cuentas","padre":"DOM-002","campos":{"clasificacion":"confidencial","datos_personales":true}},"DAT-004":{"id":"DAT-004","tipo":"EntidadDatos","workspace":"datos","nombre":"Solicitud de crédito","padre":"DOM-001","campos":{"clasificacion":"confidencial","datos_personales":true}},"NOR-001":{"id":"NOR-001","tipo":"Norma","workspace":"gobierno","nombre":"SFC CE 007/2018","padre":null,"campos":{"autoridad":"Superintendencia Financiera de Colombia","descripcion":"Requerimientos mínimos de seguridad y calidad"}},"NOR-002":{"id":"NOR-002","tipo":"Norma","workspace":"gobierno","nombre":"SFC CE 005/2019","padre":null,"campos":{"autoridad":"Superintendencia Financiera de Colombia","descripcion":"Uso de servicios de computación en la nube"}},"NOR-003":{"id":"NOR-003","tipo":"Norma","workspace":"gobierno","nombre":"Ley 1581 de 2012","padre":null,"campos":{"autoridad":"Congreso de Colombia","descripcion":"Protección de datos personales"}},"NOR-004":{"id":"NOR-004","tipo":"Norma","workspace":"gobierno","nombre":"Política interna de arquitectura (ficticia)","padre":null,"campos":{"autoridad":"Banco Ejemplo"}},"SEG-001":{"id":"SEG-001","tipo":"Regla","workspace":"gobierno","nombre":"APIs expuestas autenticadas y vía gateway","padre":null,"campos":{"categoria":"seguridad","enunciado":"Toda API expuesta a canales o terceros se publica por el gateway con OAuth2 u OIDC"}},"SEG-002":{"id":"SEG-002","tipo":"Regla","workspace":"gobierno","nombre":"mTLS para APIs a terceros","padre":null,"campos":{"categoria":"seguridad","enunciado":"Las APIs a terceros que entregan datos confidenciales o restringidos exigen mTLS"}},"NUB-002":{"id":"NUB-002","tipo":"Regla","workspace":"gobierno","nombre":"Cargas en nube pública declaran CE 005/2019","padre":null,"campos":{"categoria":"nube","enunciado":"Toda aplicación en nube pública declara la regulación SFC-CE-005-2019 y la región"}},"TEC-001":{"id":"TEC-001","tipo":"Regla","workspace":"gobierno","nombre":"Productos obsoletos o prohibidos solo con waiver","padre":null,"campos":{"categoria":"tecnologia","enunciado":"Un producto obsoleto o prohibido solo se usa con un waiver vigente"}},"ADR-001":{"id":"ADR-001","tipo":"ADR","workspace":"gobierno","nombre":"Microservicios REST sobre OpenShift","padre":null,"campos":{"estado":"aceptado","fecha":"2026-02-10"}},"ADR-002":{"id":"ADR-002","tipo":"ADR","workspace":"gobierno","nombre":"Exposición de APIs a terceros con mTLS","padre":null,"campos":{"estado":"aceptado","fecha":"2026-03-05"}},"ADR-003":{"id":"ADR-003","tipo":"ADR","workspace":"gobierno","nombre":"Modernización del Core Bancario","padre":null,"campos":{"estado":"propuesto","fecha":"2026-09-15"}},"ADR-004":{"id":"ADR-004","tipo":"ADR","workspace":"gobierno","nombre":"Crédito Digital en GCP","padre":null,"campos":{"estado":"propuesto","fecha":"2026-10-01"}},"ADR-005":{"id":"ADR-005","tipo":"ADR","workspace":"gobierno","nombre":"Retiro gradual del crédito legado","padre":null,"campos":{"estado":"aceptado","fecha":"2026-04-20"}},"ADR-006":{"id":"ADR-006","tipo":"ADR","workspace":"gobierno","nombre":"Procesamiento batch nocturno en OpenShift","padre":null,"campos":{"estado":"aceptado","fecha":"2026-05-12"}},"RSG-001":{"id":"RSG-001","tipo":"Riesgo","workspace":"gobierno","nombre":"Obsolescencia del Core Bancario","padre":null,"campos":{"severidad":"alta"}},"WVR-001":{"id":"WVR-001","tipo":"Waiver","workspace":"gobierno","nombre":"Java 8 en el crédito legado","padre":null,"campos":{"vence":"2027-03-31","justificacion":"La migración a Java 21 depende del retiro del crédito legado","plan_remediacion":"Retirar APP-005 cuando APP-006 entre en producción"}},"SOL-001":{"id":"SOL-001","tipo":"SolicitudARB","workspace":"gobierno","nombre":"Revisión de Crédito Digital en GCP","padre":null,"campos":{"estado":"en_revision","sprint":"Sprint 42"}},"ARQ-001":{"id":"ARQ-001","tipo":"Arquetipo","workspace":"gobierno","nombre":"Microservicio REST en OpenShift","padre":null,"campos":{"version":"2.1","estado":"aprobado","caso_uso":"Microservicio REST síncrono de misión crítica desplegado en OpenShift","criticidad_maxima_soportada":"tier-1","rto_base_min":30,"rpo_base_min":0}},"ARQ-002":{"id":"ARQ-002","tipo":"Arquetipo","workspace":"gobierno","nombre":"Batch nocturno","padre":null,"campos":{"version":"1.0","estado":"aprobado","caso_uso":"Proceso batch nocturno de conciliación o carga","criticidad_maxima_soportada":"tier-2","rto_base_min":480,"rpo_base_min":60}},"ARQ-003":{"id":"ARQ-003","tipo":"Arquetipo","workspace":"gobierno","nombre":"API de exposición a terceros","padre":null,"campos":{"version":"1.0","estado":"deprecado","caso_uso":"API REST expuesta a terceros (v1, reemplazada por una versión con mTLS obligatorio)","criticidad_maxima_soportada":"tier-1","rto_base_min":30,"rpo_base_min":0}},"CAP-100":{"id":"CAP-100","tipo":"CapacidadNegocio","workspace":"negocio","nombre":"Pagos","padre":null,"campos":{"nivel":1,"criticidad":"tier-1"}},"CAP-110":{"id":"CAP-110","tipo":"CapacidadNegocio","workspace":"negocio","nombre":"Pagos inmediatos","padre":"CAP-100","campos":{"nivel":2,"criticidad":"tier-1"}},"CAP-200":{"id":"CAP-200","tipo":"CapacidadNegocio","workspace":"negocio","nombre":"Gestión de clientes y cuentas","padre":null,"campos":{"nivel":1,"criticidad":"tier-1"}},"CAP-210":{"id":"CAP-210","tipo":"CapacidadNegocio","workspace":"negocio","nombre":"Vinculación digital de clientes","padre":"CAP-200","campos":{"nivel":2,"criticidad":"tier-2"}},"CAP-220":{"id":"CAP-220","tipo":"CapacidadNegocio","workspace":"negocio","nombre":"Mantenimiento de cuentas","padre":"CAP-200","campos":{"nivel":2,"criticidad":"tier-1"}},"CAP-300":{"id":"CAP-300","tipo":"CapacidadNegocio","workspace":"negocio","nombre":"Crédito","padre":null,"campos":{"nivel":1,"criticidad":"tier-2"}},"CAP-310":{"id":"CAP-310","tipo":"CapacidadNegocio","workspace":"negocio","nombre":"Originación de crédito de consumo","padre":"CAP-300","campos":{"nivel":2,"criticidad":"tier-2"}},"PRC-001":{"id":"PRC-001","tipo":"Proceso","workspace":"negocio","nombre":"Abrir cuenta de ahorros digital","padre":null,"campos":{"nivel":1}},"PRC-002":{"id":"PRC-002","tipo":"Proceso","workspace":"negocio","nombre":"Enviar pago inmediato desde el móvil","padre":null,"campos":{"nivel":1}},"ORG-001":{"id":"ORG-001","tipo":"Organizacion","workspace":"organizacion","nombre":"Banco Ejemplo","padre":null,"campos":{"pais":"Colombia","descripcion":"Banco ficticio usado como ejemplo"}},"UO-001":{"id":"UO-001","tipo":"UnidadOrganizacional","workspace":"organizacion","nombre":"Vicepresidencia de Tecnología","padre":"ORG-001","campos":{"tipo_unidad":"vicepresidencia"}},"UO-002":{"id":"UO-002","tipo":"UnidadOrganizacional","workspace":"organizacion","nombre":"Vicepresidencia de Negocios Digitales","padre":"ORG-001","campos":{"tipo_unidad":"vicepresidencia"}},"PER-001":{"id":"PER-001","tipo":"Persona","workspace":"organizacion","nombre":"Ana Rojas","padre":null,"campos":{"email":"ana.rojas@banco-ejemplo.test","cargo":"Arquitecta líder"}},"PER-002":{"id":"PER-002","tipo":"Persona","workspace":"organizacion","nombre":"Carlos Mejía","padre":null,"campos":{"email":"carlos.mejia@banco-ejemplo.test","cargo":"Dueño de producto de crédito"}},"PER-003":{"id":"PER-003","tipo":"Persona","workspace":"organizacion","nombre":"Lucía Torres","padre":null,"campos":{"email":"lucia.torres@banco-ejemplo.test","cargo":"Líder de plataformas"}},"PER-004":{"id":"PER-004","tipo":"Persona","workspace":"organizacion","nombre":"Mateo Vargas","padre":null,"campos":{"email":"mateo.vargas@banco-ejemplo.test","cargo":"Vicepresidente de Tecnología"}},"ROL-001":{"id":"ROL-001","tipo":"Rol","workspace":"organizacion","nombre":"Miembro del ARB","padre":null,"campos":{"alcance":"Revisa solicitudes de arquitectura en el sprint"}},"PLT-001":{"id":"PLT-001","tipo":"Plataforma","workspace":"tecnologia","nombre":"OpenShift on-premise","padre":null,"campos":{"tipo_plataforma":"on_premise","proveedor":"Red Hat"}},"PLT-002":{"id":"PLT-002","tipo":"Plataforma","workspace":"tecnologia","nombre":"AWS","padre":null,"campos":{"tipo_plataforma":"nube_publica","proveedor":"Amazon","region":"sa-east-1"}},"PLT-003":{"id":"PLT-003","tipo":"Plataforma","workspace":"tecnologia","nombre":"GCP","padre":null,"campos":{"tipo_plataforma":"nube_publica","proveedor":"Google","region":"southamerica-east1"}},"ENT-001":{"id":"ENT-001","tipo":"Entorno","workspace":"tecnologia","nombre":"OpenShift Producción","padre":"PLT-001","campos":{"tipo_entorno":"produccion"}},"ENT-002":{"id":"ENT-002","tipo":"Entorno","workspace":"tecnologia","nombre":"AWS Producción","padre":"PLT-002","campos":{"tipo_entorno":"produccion"}},"ENT-003":{"id":"ENT-003","tipo":"Entorno","workspace":"tecnologia","nombre":"GCP Producción","padre":"PLT-003","campos":{"tipo_entorno":"produccion"}},"BDD-001":{"id":"BDD-001","tipo":"BaseDatos","workspace":"tecnologia","nombre":"core-db","padre":null,"campos":{"motor":"Oracle","cifrado_reposo":true}},"BDD-002":{"id":"BDD-002","tipo":"BaseDatos","workspace":"tecnologia","nombre":"pagos-db","padre":null,"campos":{"motor":"PostgreSQL","cifrado_reposo":true}},"BDD-003":{"id":"BDD-003","tipo":"BaseDatos","workspace":"tecnologia","nombre":"credito-db","padre":null,"campos":{"motor":"Cloud SQL","cifrado_reposo":true}},"TPR-001":{"id":"TPR-001","tipo":"ProductoTecnologico","workspace":"tecnologia","nombre":"Java 21","padre":null,"campos":{"estado_estandar":"aprobado","version":"21"}},"TPR-002":{"id":"TPR-002","tipo":"ProductoTecnologico","workspace":"tecnologia","nombre":"Java 8","padre":null,"campos":{"estado_estandar":"obsoleto","version":"8"}}},"referencias":[{"tipo":"esta_sujeta_a","origen":"APP-001","destino":"NOR-001","campos":{}},{"tipo":"es_soportado_por","origen":"MOD-001","destino":"ENT-002","campos":{"rol_soporte":"ejecucion"}},{"tipo":"se_conecta_a","origen":"MOD-001","destino":"API-001","campos":{"tipo_solicitud":"lectura_escritura","critica":true}},{"tipo":"se_conecta_a","origen":"MOD-001","destino":"API-003","campos":{"tipo_solicitud":"lectura","critica":true}},{"tipo":"esta_sujeta_a","origen":"APP-002","destino":"NOR-001","campos":{}},{"tipo":"es_soportado_por","origen":"MOD-002","destino":"ENT-001","campos":{"rol_soporte":"ejecucion"}},{"tipo":"es_soportado_por","origen":"MOD-002","destino":"BDD-002","campos":{"rol_soporte":"persistencia"}},{"tipo":"es_soportado_por","origen":"MOD-002","destino":"TPR-001","campos":{"rol_soporte":"otro"}},{"tipo":"se_conecta_a","origen":"MOD-002","destino":"API-003","campos":{"tipo_solicitud":"lectura_escritura","critica":true}},{"tipo":"implementa","origen":"MOD-002","destino":"ARQ-001","campos":{}},{"tipo":"es_soportado_por","origen":"MOD-006","destino":"ENT-001","campos":{"rol_soporte":"ejecucion"}},{"tipo":"es_soportado_por","origen":"MOD-006","destino":"BDD-002","campos":{"rol_soporte":"persistencia"}},{"tipo":"es_soportado_por","origen":"MOD-006","destino":"TPR-001","campos":{"rol_soporte":"otro"}},{"tipo":"implementa","origen":"MOD-006","destino":"ARQ-002","campos":{}},{"tipo":"esta_sujeta_a","origen":"APP-003","destino":"NOR-001","campos":{}},{"tipo":"esta_sujeta_a","origen":"APP-003","destino":"NOR-003","campos":{}},{"tipo":"es_soportado_por","origen":"MOD-004","destino":"ENT-001","campos":{"rol_soporte":"ejecucion"}},{"tipo":"es_soportado_por","origen":"MOD-004","destino":"BDD-001","campos":{"rol_soporte":"persistencia"}},{"tipo":"es_soportado_por","origen":"MOD-005","destino":"ENT-001","campos":{"rol_soporte":"ejecucion"}},{"tipo":"es_soportado_por","origen":"MOD-005","destino":"TPR-001","campos":{"rol_soporte":"otro"}},{"tipo":"se_conecta_a","origen":"MOD-005","destino":"API-003","campos":{"tipo_solicitud":"lectura","critica":true}},{"tipo":"implementa","origen":"MOD-005","destino":"ARQ-003","campos":{}},{"tipo":"esta_sujeta_a","origen":"APP-004","destino":"NOR-003","campos":{}},{"tipo":"es_soportado_por","origen":"MOD-003","destino":"ENT-002","campos":{"rol_soporte":"ejecucion"}},{"tipo":"se_conecta_a","origen":"MOD-003","destino":"API-003","campos":{"tipo_solicitud":"lectura_escritura","critica":true}},{"tipo":"es_soportado_por","origen":"APP-005","destino":"ENT-001","campos":{"rol_soporte":"ejecucion"}},{"tipo":"es_soportado_por","origen":"APP-005","destino":"TPR-002","campos":{"rol_soporte":"otro"}},{"tipo":"se_conecta_a","origen":"APP-005","destino":"API-003","campos":{"tipo_solicitud":"lectura","critica":true}},{"tipo":"implementa","origen":"APP-005","destino":"ARQ-002","campos":{}},{"tipo":"es_reemplazada_por","origen":"APP-005","destino":"APP-006","campos":{}},{"tipo":"esta_sujeta_a","origen":"APP-005","destino":"TEC-001","campos":{}},{"tipo":"es_soportado_por","origen":"APP-006","destino":"ENT-003","campos":{"rol_soporte":"ejecucion"}},{"tipo":"es_soportado_por","origen":"APP-006","destino":"BDD-003","campos":{"rol_soporte":"persistencia"}},{"tipo":"se_conecta_a","origen":"APP-006","destino":"API-003","campos":{"tipo_solicitud":"lectura","critica":false}},{"tipo":"esta_sujeta_a","origen":"APP-006","destino":"NOR-003","campos":{}},{"tipo":"esta_sujeta_a","origen":"APP-006","destino":"NUB-002","campos":{}},{"tipo":"provee","origen":"API-001","destino":"DAT-002","campos":{}},{"tipo":"esta_sujeta_a","origen":"API-001","destino":"SEG-001","campos":{}},{"tipo":"provee","origen":"API-002","destino":"DAT-003","campos":{}},{"tipo":"provee","origen":"API-002","destino":"DAT-001","campos":{}},{"tipo":"esta_sujeta_a","origen":"API-002","destino":"SEG-001","campos":{}},{"tipo":"esta_sujeta_a","origen":"API-002","destino":"SEG-002","campos":{}},{"tipo":"provee","origen":"API-003","destino":"DAT-003","campos":{}},{"tipo":"provee","origen":"API-004","destino":"DAT-001","campos":{}},{"tipo":"provee","origen":"IFZ-001","destino":"DAT-004","campos":{}},{"tipo":"esta_sujeta_a","origen":"DAT-001","destino":"NOR-003","campos":{}},{"tipo":"esta_sujeta_a","origen":"DAT-003","destino":"NOR-003","campos":{}},{"tipo":"esta_sujeta_a","origen":"DAT-004","destino":"NOR-003","campos":{}},{"tipo":"deriva_de","origen":"SEG-001","destino":"NOR-001","campos":{}},{"tipo":"deriva_de","origen":"SEG-001","destino":"NOR-004","campos":{}},{"tipo":"deriva_de","origen":"SEG-002","destino":"NOR-001","campos":{}},{"tipo":"deriva_de","origen":"NUB-002","destino":"NOR-002","campos":{}},{"tipo":"deriva_de","origen":"TEC-001","destino":"NOR-004","campos":{}},{"tipo":"mitiga","origen":"TEC-001","destino":"RSG-001","campos":{}},{"tipo":"decide_sobre","origen":"ADR-001","destino":"APP-001","campos":{}},{"tipo":"decide_sobre","origen":"ADR-001","destino":"APP-002","campos":{}},{"tipo":"decide_sobre","origen":"ADR-001","destino":"APP-004","campos":{}},{"tipo":"decide_sobre","origen":"ADR-001","destino":"PLT-001","campos":{}},{"tipo":"decide_sobre","origen":"ADR-002","destino":"API-002","campos":{}},{"tipo":"decide_sobre","origen":"ADR-003","destino":"APP-003","campos":{}},{"tipo":"mitiga","origen":"ADR-003","destino":"RSG-001","campos":{}},{"tipo":"decide_sobre","origen":"ADR-004","destino":"APP-006","campos":{}},{"tipo":"decide_sobre","origen":"ADR-004","destino":"PLT-003","campos":{}},{"tipo":"decide_sobre","origen":"ADR-005","destino":"APP-005","campos":{}},{"tipo":"afecta_a","origen":"RSG-001","destino":"APP-003","campos":{}},{"tipo":"exceptua","origen":"WVR-001","destino":"TEC-001","campos":{}},{"tipo":"se_otorga_a","origen":"WVR-001","destino":"APP-005","campos":{}},{"tipo":"evalua","origen":"SOL-001","destino":"APP-006","campos":{}},{"tipo":"produce","origen":"SOL-001","destino":"ADR-004","campos":{}},{"tipo":"deriva_de","origen":"ARQ-001","destino":"ADR-001","campos":{}},{"tipo":"se_despliega_en","origen":"ARQ-001","destino":"PLT-001","campos":{}},{"tipo":"usa","origen":"ARQ-001","destino":"TPR-001","campos":{}},{"tipo":"cumple","origen":"ARQ-001","destino":"SEG-001","campos":{}},{"tipo":"cumple","origen":"ARQ-001","destino":"TEC-001","campos":{}},{"tipo":"deriva_de","origen":"ARQ-002","destino":"ADR-006","campos":{}},{"tipo":"se_despliega_en","origen":"ARQ-002","destino":"PLT-001","campos":{}},{"tipo":"usa","origen":"ARQ-002","destino":"TPR-001","campos":{}},{"tipo":"cumple","origen":"ARQ-002","destino":"TEC-001","campos":{}},{"tipo":"deriva_de","origen":"ARQ-003","destino":"ADR-002","campos":{}},{"tipo":"se_despliega_en","origen":"ARQ-003","destino":"PLT-001","campos":{}},{"tipo":"usa","origen":"ARQ-003","destino":"TPR-001","campos":{}},{"tipo":"cumple","origen":"ARQ-003","destino":"SEG-001","campos":{}},{"tipo":"cumple","origen":"ARQ-003","destino":"SEG-002","campos":{}},{"tipo":"es_realizada_por","origen":"CAP-110","destino":"APP-002","campos":{}},{"tipo":"es_realizada_por","origen":"CAP-110","destino":"PRC-002","campos":{}},{"tipo":"es_realizada_por","origen":"CAP-210","destino":"APP-004","campos":{}},{"tipo":"es_realizada_por","origen":"CAP-210","destino":"PRC-001","campos":{}},{"tipo":"es_realizada_por","origen":"CAP-220","destino":"APP-003","campos":{}},{"tipo":"es_realizada_por","origen":"CAP-310","destino":"APP-005","campos":{}},{"tipo":"es_realizada_por","origen":"CAP-310","destino":"APP-006","campos":{}},{"tipo":"usa","origen":"PRC-001","destino":"APP-004","campos":{}},{"tipo":"usa","origen":"PRC-001","destino":"APP-003","campos":{}},{"tipo":"usa","origen":"PRC-002","destino":"APP-001","campos":{}},{"tipo":"usa","origen":"PRC-002","destino":"APP-002","campos":{}},{"tipo":"consume","origen":"UO-002","destino":"APP-001","campos":{}},{"tipo":"consume","origen":"UO-002","destino":"APP-004","campos":{}},{"tipo":"consume","origen":"UO-002","destino":"APP-006","campos":{}},{"tipo":"pertenece_a","origen":"PER-001","destino":"UO-001","campos":{}},{"tipo":"reporta_a","origen":"PER-001","destino":"PER-004","campos":{}},{"tipo":"tiene_rol","origen":"PER-001","destino":"ROL-001","campos":{}},{"tipo":"es_experto_en","origen":"PER-001","destino":"APP-003","campos":{}},{"tipo":"es_dueno_de","origen":"PER-001","destino":"ARQ-001","campos":{}},{"tipo":"es_dueno_de","origen":"PER-001","destino":"ARQ-002","campos":{}},{"tipo":"es_dueno_de","origen":"PER-001","destino":"ARQ-003","campos":{}},{"tipo":"es_dueno_de","origen":"PER-001","destino":"RSG-001","campos":{}},{"tipo":"aprueba","origen":"PER-001","destino":"ADR-001","campos":{}},{"tipo":"aprueba","origen":"PER-001","destino":"ADR-002","campos":{}},{"tipo":"aprueba","origen":"PER-001","destino":"ADR-006","campos":{}},{"tipo":"aprueba","origen":"PER-001","destino":"WVR-001","campos":{}},{"tipo":"pertenece_a","origen":"PER-002","destino":"UO-002","campos":{}},{"tipo":"reporta_a","origen":"PER-002","destino":"PER-004","campos":{}},{"tipo":"es_dueno_de","origen":"PER-002","destino":"APP-004","campos":{}},{"tipo":"es_dueno_de","origen":"PER-002","destino":"APP-005","campos":{}},{"tipo":"es_dueno_de","origen":"PER-002","destino":"APP-006","campos":{}},{"tipo":"es_dueno_de","origen":"PER-002","destino":"CAP-300","campos":{}},{"tipo":"es_dueno_de","origen":"PER-002","destino":"DAT-004","campos":{}},{"tipo":"pertenece_a","origen":"PER-003","destino":"UO-001","campos":{}},{"tipo":"reporta_a","origen":"PER-003","destino":"PER-004","campos":{}},{"tipo":"tiene_rol","origen":"PER-003","destino":"ROL-001","campos":{}},{"tipo":"es_experto_en","origen":"PER-003","destino":"PLT-001","campos":{}},{"tipo":"es_dueno_de","origen":"PER-003","destino":"PLT-001","campos":{}},{"tipo":"es_dueno_de","origen":"PER-003","destino":"PLT-002","campos":{}},{"tipo":"es_dueno_de","origen":"PER-003","destino":"PLT-003","campos":{}},{"tipo":"es_dueno_de","origen":"PER-003","destino":"APP-002","campos":{}},{"tipo":"es_dueno_de","origen":"PER-003","destino":"APP-003","campos":{}},{"tipo":"pertenece_a","origen":"PER-004","destino":"UO-001","campos":{}},{"tipo":"es_dueno_de","origen":"PER-004","destino":"APP-001","campos":{}},{"tipo":"es_dueno_de","origen":"PER-004","destino":"DAT-001","campos":{}},{"tipo":"es_dueno_de","origen":"PER-004","destino":"DAT-002","campos":{}},{"tipo":"es_dueno_de","origen":"PER-004","destino":"DAT-003","campos":{}},{"tipo":"es_dueno_de","origen":"PER-004","destino":"CAP-100","campos":{}},{"tipo":"es_dueno_de","origen":"PER-004","destino":"CAP-200","campos":{}},{"tipo":"aprueba","origen":"PER-004","destino":"ADR-005","campos":{}},{"tipo":"esta_sujeta_a","origen":"PLT-002","destino":"NUB-002","campos":{}},{"tipo":"esta_sujeta_a","origen":"PLT-003","destino":"NUB-002","campos":{}},{"tipo":"es_soportado_por","origen":"BDD-001","destino":"ENT-001","campos":{}},{"tipo":"almacena","origen":"BDD-001","destino":"DAT-003","campos":{}},{"tipo":"es_soportado_por","origen":"BDD-002","destino":"ENT-001","campos":{}},{"tipo":"almacena","origen":"BDD-002","destino":"DAT-002","campos":{}},{"tipo":"es_soportado_por","origen":"BDD-003","destino":"ENT-003","campos":{}},{"tipo":"almacena","origen":"BDD-003","destino":"DAT-004","campos":{}},{"tipo":"es_reemplazada_por","origen":"TPR-002","destino":"TPR-001","campos":{}}]},"consistencia":{"fecha_corte":"2026-10-21","color":"ROJO","total":6,"hallazgos":[{"regla":"GRF-004","severidad":"alta","componente":"API-004","mensaje":"API-004 está expuesta a canales y no está sujeta a ninguna regla SEG"},{"regla":"GRF-003","severidad":"media","componente":"APP-003","mensaje":"APP-003 es crítica y está en producción sin un ADR aceptado"},{"regla":"GRF-007","severidad":"media","componente":"APP-006","mensaje":"APP-006 corre en nube pública y no declara SFC-CE-005-2019"},{"regla":"GRF-012","severidad":"media","componente":"APP-006","mensaje":"APP-006 está en implementación sin arquetipo aprobado ni waiver vigente"},{"regla":"GRF-013","severidad":"alta","componente":"MOD-005","mensaje":"MOD-005 implementa el arquetipo deprecado ARQ-003"},{"regla":"GRF-014","severidad":"alta","componente":"MOD-006","mensaje":"MOD-006 (APP-002) exige más que el arquetipo ARQ-002: RPO 0 < base 60; RTO 30 < base 480; tier-1 supera tier-2"}]},"reglas":[{"id":"GRF-001","descripcion":"Toda aplicación crítica (tier-1/2, no retirada) declara RTO y RPO"},{"id":"GRF-002","descripcion":"Toda aplicación crítica tiene exactamente un dueño"},{"id":"GRF-003","descripcion":"Toda aplicación crítica en producción tiene un ADR aceptado que decide sobre ella"},{"id":"GRF-004","descripcion":"Toda API expuesta a canales o terceros está sujeta a al menos una regla SEG"},{"id":"GRF-005","descripcion":"Toda API a terceros que entrega datos confidenciales o restringidos está sujeta a SEG-002 (mTLS)"},{"id":"GRF-006","descripcion":"Un producto obsoleto o prohibido solo se usa con un waiver vigente de TEC-001"},{"id":"GRF-007","descripcion":"Si la aplicación corre en nube pública, declara SFC-CE-005-2019"},{"id":"GRF-008","descripcion":"TIME = migrar exige una aplicación sucesora (es_reemplazada_por)"},{"id":"GRF-009","descripcion":"Nada activo se conecta a una aplicación retirada"},{"id":"GRF-010","descripcion":"Una aplicación no promete un RTO menor que el de una dependencia crítica"},{"id":"GRF-011","descripcion":"Waiver vencido (aviso al ARB)"},{"id":"GRF-012","descripcion":"Aplicación en implementación sin arquetipo aprobado ni waiver vigente que lo exceptúe"},{"id":"GRF-013","descripcion":"Aplicación o módulo que implementa un arquetipo deprecado"},{"id":"GRF-014","descripcion":"La aplicación exige más que su arquetipo: criticidad mayor que la máxima soportada, o RTO/RPO menor que el base"}]};
-</script>
-<script>
-(function () {
-'use strict';
-
-/* ---------------- Textos editables ---------------- */
-const CIFRAS_ILUSTRATIVAS = { antes: '~3 días', despues: 'minutos' };   // REEMPLAZAR con los datos reales de la organización
-const FRASE_CIERRE = 'Decidimos y gobernamos con hechos conectados, no con supuestos.';
-const NOTAS = [
-  'Abrir con el objetivo: un solo modelo que conecte aplicaciones, datos, tecnología, riesgo y regulación. Todo lo que verán a continuación sale de datos de ejemplo, pero con la misma estructura que usaríamos en el banco.',
-  'Contrastar el hoy con el modelo. Cuidado: las cifras de la franja (días contra minutos) son ilustrativas; reemplazarlas por las mediciones reales del ARB antes de presentar.',
-  'Qué diseñamos: 6 áreas, 23 tipos de componente y 27 tipos de relación que se leen como frases. La regla de oro: solo se puede conectar lo que el metamodelo define. Usar el botón “conexión no permitida” para mostrarlo.',
-  'Momento estelar. Pedir al director que elija: AWS (12 componentes, 4 capacidades) y luego OpenShift (28 componentes, las 7 capacidades). El mensaje: concentración de riesgo visible. Clic en un nodo rojo muestra el porqué paso a paso.',
-  'Mostrar cómo llega una solicitud al ARB: hechos reunidos con ID citables. Las reglas se encienden y salen 2 hallazgos (amarillo). Luego “estado de todo el banco”: el mismo motor revisa todo y da rojo con 6 hallazgos.',
-  'Cerrar con la frase de valor y los tres beneficios. Proponer el siguiente paso: un piloto con 20 a 30 aplicaciones reales.'
-];
-
-/* ---------------- Datos ---------------- */
-const D = DATOS, G = D.grafo, MM = D.mm, M = window.Motor;
-const NOM = { Organizacion:'Organización', UnidadOrganizacional:'Unidad organizacional', Persona:'Persona', Rol:'Rol',
-  CapacidadNegocio:'Capacidad de negocio', Proceso:'Proceso', Aplicacion:'Aplicación', ModuloAplicacion:'Módulo de aplicación',
-  API:'API', Interfaz:'Interfaz', DominioDatos:'Dominio de datos', EntidadDatos:'Entidad de datos', Plataforma:'Plataforma',
-  Entorno:'Entorno', BaseDatos:'Base de datos', ProductoTecnologico:'Producto tecnológico', Norma:'Norma', Regla:'Regla',
-  ADR:'ADR (decisión)', Riesgo:'Riesgo', Waiver:'Waiver (excepción)', SolicitudARB:'Solicitud ARB', Arquetipo:'Arquetipo' };
-const WS = { organizacion:['Organización','Quién es quién'], negocio:['Negocio','Qué hace el banco'], aplicaciones:['Aplicaciones','Qué sistemas lo soportan'],
-  datos:['Datos','Qué información maneja'], tecnologia:['Tecnología','Dónde y cómo corre'], gobierno:['Gobierno','Reglas, decisiones y riesgo'] };
-const REL = { es_soportado_por:'depende de', se_conecta_a:'se conecta a', usa:'usa', es_realizada_por:'es realizada por', hijo_de:'es parte de', tiene_hijo:'contiene a' };
-
-const $ = (s, r) => (r || document).querySelector(s);
-const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
-const nombre = id => G.componentes[id].nombre;
-const slides = $$('.slide');
-let actual = 0, timers = [];
-const despues = (ms, fn) => { timers.push(setTimeout(fn, ms)); };
-const limpiar = () => { timers.forEach(clearTimeout); timers = []; };
-function contar(el, hasta, ms) {
-  const t0 = performance.now(); let fin = false;
-  (function paso(t) { if (fin) return; const k = Math.min(1, (t - t0) / ms); el.textContent = Math.round(hasta * (1 - Math.pow(1 - k, 3)));
-    if (k < 1) requestAnimationFrame(paso); })(t0);
-  despues(ms + 150, () => { fin = true; el.textContent = hasta; });   // valor final garantizado aunque se pierdan fotogramas
-}
-
-/* ---------------- Escenario, navegación ---------------- */
-function ajustar() {
-  const k = Math.min(innerWidth / 1920, innerHeight / 1080);
-  $('#escenario').style.transform = 'translate(-50%,-50%) scale(' + k + ')';
-}
-addEventListener('resize', ajustar); ajustar();
-
-const puntos = $('#puntos');
-slides.forEach((s, i) => { const p = document.createElement('div'); p.className = 'punto'; p.onclick = () => ir(i); puntos.appendChild(p); });
-
-function ir(i) {
-  if (i < 0 || i >= slides.length) return;
-  limpiar();
-  slides.forEach((s, k) => { s.classList.toggle('on', k === i); s.classList.toggle('salio', k < i); });
-  $$('.punto').forEach((p, k) => p.classList.toggle('on', k === i));
-  actual = i;
-  $('#notas').innerHTML = '<b>NOTAS DEL PRESENTADOR · ' + (i + 1) + '/' + slides.length + '</b>' + NOTAS[i];
-  ENTRAR[i]();
-}
-addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); ir(actual + 1); }
-  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); ir(actual - 1); }
-  else if (e.key === 'Home') ir(0);
-  else if (e.key === 'End') ir(slides.length - 1);
-  else if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); }
-  else if (e.key === 'n' || e.key === 'N') { const n = $('#notas'); n.style.display = n.style.display === 'block' ? 'none' : 'block'; }
-  else if (e.key === 'r' || e.key === 'R') ir(actual);
-  else if (/^[1-6]$/.test(e.key)) ir(+e.key - 1);
-});
-
-/* ---------------- Portada ---------------- */
-(function () {
-  const svg = $('#grafoPortada'); let h = '';
-  const P = [[380,90],[170,200],[590,170],[90,400],[330,330],[560,360],[690,520],[220,560],[450,540],[120,700],[360,720],[600,700],[390,450],[250,110],[690,300]];
-  const L = [[0,1],[0,2],[0,13],[1,3],[1,4],[2,5],[2,14],[4,5],[4,12],[3,7],[5,6],[12,8],[7,8],[7,9],[8,10],[8,11],[6,11],[10,11],[9,10],[4,1],[12,5],[14,6]];
-  L.forEach(l => { h += '<line class="lazo" x1="' + P[l[0]][0] + '" y1="' + P[l[0]][1] + '" x2="' + P[l[1]][0] + '" y2="' + P[l[1]][1] + '"/>'; });
-  P.forEach((p, i) => { h += '<circle class="nodo-p ' + (i % 3 ? 'claro' : '') + '" style="animation-delay:' + (i * .25).toFixed(2) + 's" cx="' + p[0] + '" cy="' + p[1] + '" r="' + (i % 4 === 0 ? 20 : 12) + '"/>'; });
-  svg.innerHTML = h;
-})();
-
-/* ---------------- 1 Problema ---------------- */
-const HOY = ['Inventarios en Excel y presentaciones desactualizadas', 'Cada solicitud al ARB se revisa leyendo documentos', 'Las reglas se aplican de memoria', 'El impacto de una caída se descubre durante el incidente'];
-const CON = ['Un solo grafo: ' + Object.keys(G.componentes).length + ' componentes y ' + G.referencias.length + ' relaciones', 'Cada hecho tiene un ID que se puede citar', '14 reglas automáticas con semáforo', 'El impacto de una caída se calcula en segundos'];
-$('#listaHoy').innerHTML = HOY.map(t => '<li>' + t + '</li>').join('');
-$('#listaCon').innerHTML = CON.map(t => '<li>' + t + '</li>').join('');
-$('#cifraAntes').textContent = CIFRAS_ILUSTRATIVAS.antes; $('#cifraDespues').textContent = CIFRAS_ILUSTRATIVAS.despues;
-
-/* ---------------- 2 Estructura ---------------- */
-function cardTxt(c) {
-  if (!c) return '';
-  if (c.min !== undefined && c.max !== undefined && c.min === c.max) return 'exactamente ' + c.min;
-  const p = []; if (c.min !== undefined) p.push('mín. ' + c.min); if (c.max !== undefined) p.push('máx. ' + c.max); return p.join(', ');
-}
-const nTipos = Object.keys(MM.tipos_componente).length, nRefs = Object.keys(MM.tipos_referencia).length;
-const nTriples = Object.values(MM.tipos_referencia).reduce((a, r) => a + r.triples.length, 0);
-$('#cifras2').innerHTML = [[Object.keys(MM.workspaces).length, 'áreas'], [nTipos, 'tipos de componente'], [nRefs, 'tipos de relación'], [nTriples, 'conexiones permitidas']]
-  .map(c => '<div class="cifra"><b data-n="' + c[0] + '">0</b>' + c[1] + '</div>').join('');
-$('#areas').innerHTML = Object.keys(MM.workspaces).map(ws => '<div class="area"><h4>' + WS[ws][0] + '</h4><p>' + WS[ws][1] + '</p><div class="chips">' +
-  Object.keys(MM.tipos_componente).filter(t => MM.tipos_componente[t].workspace === ws).map(t => '<button class="chip" data-t="' + t + '">' + NOM[t] + '</button>').join('') + '</div></div>').join('');
-function mostrarTipo(t) {
-  $$('.chip').forEach(c => c.classList.toggle('on', c.dataset.t === t));
-  const T = MM.tipos_componente[t], frases = [];
-  Object.keys(MM.tipos_referencia).forEach(r => MM.tipos_referencia[r].triples.forEach(tr => {
-    if (tr.origen !== t && tr.destino !== t) return;
-    const f = MM.tipos_referencia[r].frase.replace('{o}', NOM[tr.origen]).replace('{d}', NOM[tr.destino]);
-    const card = tr.origen === t ? cardTxt(tr.salida) : cardTxt(tr.entrada);
-    frases.push({ f: f, card: card, sal: tr.origen === t });
-  }));
-  frases.sort((a, b) => (b.sal - a.sal) || (b.card.length - a.card.length));
-  const campos = Object.keys(T.campos).filter(k => T.campos[k].obligatorio);
-  const esReferencia = /^\[Referencia\]/.test(T.origen || '');
-  const padres = (T.padres || []).map(p => NOM[p]).join(' / ');
-  $('#detalle').innerHTML = '<h3>' + NOM[t] + '</h3><span class="tag">' + WS[T.workspace][0] + '</span><span class="tag" style="' + (esReferencia ? '' : 'background:#1C1C1E;color:#fff') + '">' + (esReferencia ? 'Concepto de referencia' : 'Diseño propio') + '</span>' +
-    (padres ? '<span class="tag" style="background:#F4F5F7;color:#444">Hijo de: ' + padres + '</span>' : '') +
-    '<h5>Se conecta así (' + frases.length + ')</h5><ul>' + frases.slice(0, 7).map(x => '<li>' + x.f + (x.card ? '<small>' + x.card + '</small>' : '') + '</li>').join('') +
-    (frases.length > 7 ? '<li><small>y ' + (frases.length - 7) + ' conexiones más…</small></li>' : '') + '</ul>' +
-    '<h5>Datos obligatorios</h5><ul><li>' + (campos.length ? campos.map(c => '<b>' + c.replace(/_/g, ' ') + '</b>').join(' · ') : '<small>solo el nombre</small>') + '</li></ul>' +
-    '<div class="resultado" id="resultado"></div>' +
-    '<div class="acciones"><button class="btn suave" id="btnSi">✓ Conexión permitida</button><button class="btn" id="btnNo">✕ Conexión no permitida</button></div>';
-  $('#btnSi').onclick = () => { const r = $('#resultado'); r.className = 'resultado ok'; r.innerHTML = '✓ <b>Capacidad de negocio es realizada por Aplicación</b> está definido en el metamodelo: se acepta.'; };
-  $('#btnNo').onclick = () => { const r = $('#resultado'); r.className = 'resultado'; void r.offsetWidth; r.className = 'resultado mal'; r.innerHTML = '✕ <b>ERROR E012</b> · Aplicación es realizada por Aplicación no está definido en el metamodelo: se rechaza.'; };
-}
-$$('.chip').forEach(c => c.onclick = () => mostrarTipo(c.dataset.t));
-
-/* ---------------- 3 Mapa vivo ---------------- */
-const NW = 128, NH = 44;
-const POS = { 'CAP-100':[400,18],'CAP-200':[800,18],'CAP-300':[1240,18],
-  'PRC-002':[240,98],'CAP-110':[400,98],'PRC-001':[560,98],'CAP-210':[720,98],'CAP-220':[880,98],'CAP-310':[1240,98],
-  'APP-001':[150,205],'APP-004':[310,205],'APP-002':[560,205],'APP-003':[840,205],'APP-005':[1040,205],'APP-006':[1240,205],
-  'MOD-001':[150,290],'MOD-003':[310,290],'MOD-002':[500,290],'MOD-006':[650,290],'MOD-004':[800,290],'MOD-005':[950,290],'IFZ-001':[1360,290],
-  'API-004':[310,375],'API-001':[500,375],'API-003':[800,375],'API-002':[950,375],
-  'BDD-002':[500,485],'BDD-001':[650,485],'TPR-001':[800,485],'TPR-002':[950,485],'BDD-003':[1240,485],
-  'ENT-002':[230,565],'ENT-001':[720,565],'ENT-003':[1240,565],
-  'PLT-002':[230,645],'PLT-001':[720,645],'PLT-003':[1240,645] };
-const mapa = $('#mapa'), nodosEl = {}, aristas = {};
-const centro = id => POS[id][0] + 'px';
-(function dibujar() {
-  let s = '<rect class="banda neg" x="0" y="0" width="1500" height="168" rx="14"/><rect class="banda" x="0" y="180" width="1500" height="282" rx="14"/><rect class="banda" x="0" y="474" width="1500" height="266" rx="14"/>' +
-    '<text class="rotulo" transform="translate(22,84) rotate(-90)" text-anchor="middle">NEGOCIO</text><text class="rotulo" transform="translate(22,320) rotate(-90)" text-anchor="middle">APLICACIONES</text><text class="rotulo" transform="translate(22,607) rotate(-90)" text-anchor="middle">TECNOLOGÍA</text>';
-  const par = {}; const add = (a, b, cls) => { if (!POS[a] || !POS[b]) return; const k = [a, b].sort().join('|'); if (par[k]) return; par[k] = 1;
-    const A = POS[a], B = POS[b]; let up = A, lo = B; if (A[1] > B[1]) { up = B; lo = A; }
-    let d; if (A[1] === B[1]) { d = 'M' + A[0] + ' ' + (A[1] - NH / 2 + 22 - 22) + ' C' + A[0] + ' ' + (A[1] - 38) + ' ' + B[0] + ' ' + (A[1] - 38) + ' ' + B[0] + ' ' + A[1]; }
-    else { const y1 = up[1] + NH, y2 = lo[1], m = (y1 + y2) / 2; d = 'M' + up[0] + ' ' + y1 + ' C' + up[0] + ' ' + m + ' ' + lo[0] + ' ' + m + ' ' + lo[0] + ' ' + y2; }
-    aristas[k] = { cls: cls, d: d }; };
-  Object.keys(POS).forEach(id => { const p = G.componentes[id].padre; if (p) add(id, p, 'jer'); });
-  G.referencias.forEach(r => { if (['es_soportado_por', 'se_conecta_a', 'usa', 'es_realizada_por'].indexOf(r.tipo) >= 0) add(r.origen, r.destino, ''); });
-  Object.keys(aristas).forEach(k => { s += '<path class="arista ' + aristas[k].cls + '" data-k="' + k + '" d="' + aristas[k].d + '"/>'; });
-  Object.keys(POS).forEach(id => { const x = POS[id][0] - NW / 2, y = POS[id][1], n = nombre(id), c = n.length > 19 ? n.slice(0, 18) + '…' : n;
-    s += '<g class="nodo" data-id="' + id + '"><title>' + id + ' · ' + n + '</title><rect x="' + x + '" y="' + y + '" width="' + NW + '" height="' + NH + '" rx="9"/>' +
-      '<text class="id" x="' + POS[id][0] + '" y="' + (y + 18) + '" text-anchor="middle">' + id + '</text><text class="nm" x="' + POS[id][0] + '" y="' + (y + 35) + '" text-anchor="middle">' + c + '</text></g>'; });
-  mapa.innerHTML = s;
-  $$('.nodo', mapa).forEach(g => { nodosEl[g.dataset.id] = g; g.onclick = () => clicNodo(g.dataset.id); });
-  $$('.arista', mapa).forEach(p => { aristas[p.dataset.k].el = p; });
-})();
-
-let sim = null;
-function reiniciarMapa() {
-  limpiar(); sim = null; $('#porque').style.display = 'none';
-  Object.values(nodosEl).forEach(g => g.setAttribute('class', 'nodo'));
-  Object.values(aristas).forEach(a => a.el.setAttribute('class', 'arista ' + a.cls));
-  ['mTot', 'mApp', 'mCap'].forEach(i => $('#' + i).textContent = 0);
-  $$('[data-cae]').forEach(b => b.classList.remove('on'));
-}
-function simular(origen) {
-  reiniciarMapa();
-  const res = M.impacto(G, MM, origen); sim = res;
-  $$('[data-cae]').forEach(b => b.classList.toggle('on', b.dataset.cae === origen));
-  const rondas = {}; Object.keys(res.estado).forEach(id => { (rondas[res.ronda[id]] = rondas[res.ronda[id]] || []).push(id); });
-  const n = Math.max.apply(null, Object.keys(rondas).map(Number));
-  let tot = 0, app = 0, cap = 0;
-  Object.values(nodosEl).forEach(g => { if (!(g.dataset.id in res.estado)) g.classList.add('tenue'); });
-  for (let r = 0; r <= n; r++) despues(r * 750, () => {
-    (rondas[r] || []).forEach(id => {
-      const g = nodosEl[id]; g.classList.remove('tenue'); g.classList.add(res.estado[id]); if (r === 0) g.classList.add('origen');
-      const c = res.causa[id]; if (c.via) { const k = [id, c.via].sort().join('|'); if (aristas[k]) aristas[k].el.classList.add('activa'); }
-      if (r > 0) { tot++; if (G.componentes[id].tipo === 'Aplicacion') app++; if (G.componentes[id].tipo === 'CapacidadNegocio') cap++; }
-    });
-    $('#mTot').textContent = tot; $('#mApp').textContent = app; $('#mCap').textContent = cap;
-  });
-}
-function cadena(id) {
-  const out = []; let x = id; const visto = {};
-  while (x && !visto[x]) { visto[x] = 1; const c = sim.causa[x]; if (!c.via) break; out.push('<p><b>' + nombre(x) + '</b> <small>' + x + '</small> ' + (REL[c.rel] || c.rel) + ' <b>' + nombre(c.via) + '</b> <small>' + c.via + '</small></p>'); x = c.via; }
-  return out;
-}
-function clicNodo(id) {
-  if (sim && sim.estado[id] && sim.ronda[id] > 0) {
-    const e = sim.estado[id] === 'caido' ? 'cae' : 'queda degradado';
-    $('#porque').innerHTML = '<span class="x" onclick="this.parentNode.style.display=\'none\'">×</span><h6>¿Por qué ' + e + '?</h6><p style="font-size:22px"><b>' + nombre(id) + '</b></p>' + cadena(id).join('');
-    $('#porque').style.display = 'block';
-  } else simular(id);
-}
-$$('[data-cae]').forEach(b => b.onclick = () => simular(b.dataset.cae));
-$('#btnReiniciar').onclick = reiniciarMapa;
-function contarImpacto(o) { const r = M.impacto(G, MM, o).estado; let t = 0, a = 0, c = 0, cc = 0;
-  Object.keys(r).forEach(id => { if (id === o) return; t++; const tp = G.componentes[id].tipo; if (tp === 'Aplicacion') a++; if (tp === 'CapacidadNegocio') { c++; if (r[id] === 'caido') cc++; } });
-  return { t: t, a: a, c: c, cc: cc }; }
-$('#btnComparar').onclick = () => {
-  const A = contarImpacto('PLT-002'), O = contarImpacto('PLT-001'), C = contarImpacto('PLT-003'), mx = Math.max(A.t, O.t, C.t);
-  const nCaps = Object.keys(G.componentes).filter(i => G.componentes[i].tipo === 'CapacidadNegocio').length;
-  const fila = (n, x) => '<div class="barra-f"><span>' + n + '</span><div class="pista"><div class="relleno" data-w="' + (100 * x.t / mx) + '"></div></div><b>' + x.t + '</b></div>';
-  const el = $('#comparar');
-  el.innerHTML = '<span class="cerrar" onclick="this.parentNode.style.display=\'none\'">×</span><h3>Componentes afectados según la plataforma que cae</h3>' +
-    fila('AWS', A) + fila('OpenShift', O) + fila('GCP', C) +
-    '<p class="conc">Si cae OpenShift se ven afectadas ' + O.c + ' de las ' + nCaps + ' capacidades de negocio (AWS: ' + A.c + '). Eso es concentración de riesgo, y hoy no se ve hasta que ocurre.</p>';
-  el.style.display = 'block';
-  despues(60, () => $$('.relleno', el).forEach(r => r.style.width = r.dataset.w + '%'));
-};
-
-/* ---------------- 4 Valor ---------------- */
-const APP = 'APP-006', SOL = 'SOL-001';
-function nubeTxt(e) { return nombre(e.id) + ' (' + (e.nube ? 'nube pública' : 'on-premise') + ')'; }
-function pintarSolicitud() {
-  const c = M.contexto(G, APP), a = G.componentes[APP].campos;
-  const filas = [
-    ['Aplicación', '<b>' + nombre(APP) + '</b> · ' + a.criticidad + ' · ' + ({ en_implementacion: 'en implementación', en_produccion: 'en producción', en_retiro: 'en retiro', retirado: 'retirado' })[a.fase_ciclo_vida]],
-    ['RTO / RPO', a.rto_min + ' min / ' + a.rpo_min + ' min · dueño ' + c.duenos.map(nombre).join(', ')],
-    ['Capacidad', c.capacidades.map(nombre).join(', ')],
-    ['Corre en', c.entornos.map(nubeTxt).join(', ')],
-    ['Datos', c.datos.map(d => nombre(d) + ' [' + G.componentes[d].campos.clasificacion + ']').join(', ')],
-    ['Depende de', c.dependencias.map(d => nombre(d.app) + (d.critica ? '' : ' (no crítica)')).join(', ') || '—'],
-    ['Regulación', 'Declara ' + c.declarada.join(', ') + (c.faltan.length ? '<br><span class="mal">Falta declarar ' + c.faltan.join(', ') + '</span>' : '')],
-    ['Decisión (ADR)', c.adrs.map(x => x + ' (' + G.componentes[x].campos.estado + ')').join(', ') || 'ninguna'],
-    ['Excepciones', c.waivers.length ? c.waivers.join(', ') : 'ninguna']];
-  $('#solicitud').innerHTML = '<span class="idl">' + SOL + '</span><h3>' + nombre(SOL) + '</h3>' + filas.map(f => '<div class="hecho"><span>' + f[0] + '</span><div>' + f[1] + '</div></div>').join('');
-}
-const aplicanA = id => { const p = id; let x = id; while (x) { if (x === APP) return true; x = G.componentes[x] && G.componentes[x].padre; } return p === APP; };
-function pintarReglas() {
-  const hall = D.consistencia.hallazgos.filter(h => aplicanA(h.componente));
-  $('#listaReglas').innerHTML = D.reglas.map(r => { const h = hall.filter(x => x.regla === r.id)[0];
-    return '<div class="regla' + (h ? ' fallo' : '') + '" data-id="' + r.id + '"><div class="est">' + (h ? '✕' : '✓') + '</div><div class="rid">' + r.id + '</div><div>' + r.descripcion + (h ? '<small>' + h.mensaje + '</small>' : '') + '</div></div>'; }).join('');
-  const alta = hall.some(h => h.severidad === 'alta');
-  $('#semaforo').innerHTML = '<div class="luz ' + (alta ? 'rojo' : '') + '"></div><div><b>' + (alta ? 'ROJO' : hall.length ? 'AMARILLO' : 'VERDE') + '</b><span>' + hall.length + ' hallazgos</span></div>';
-}
-function pintarBanco() {
-  const R = D.consistencia;
-  $('#banco').innerHTML = '<h3>Estado de todo el banco</h3><p style="margin:0 0 6px;font-size:20px"><b style="color:var(--rojo)">' + R.color + '</b> · ' + R.total + ' hallazgos · corte ' + R.fecha_corte + '</p>' +
-    R.hallazgos.map(h => '<div class="hallazgo"><b>' + h.regla + '</b><span class="sev ' + h.severidad + '">' + h.severidad + '</span><span>' + h.componente + '</span><span>' + h.mensaje + '</span></div>').join('');
-}
-pintarSolicitud(); pintarReglas(); pintarBanco();
-function verBanco(v) { $('#banco').style.display = v ? 'block' : 'none'; $('#btnBanco').style.display = v ? 'none' : ''; $('#btnVolverSol').style.display = v ? '' : 'none'; }
-$('#btnBanco').onclick = () => verBanco(true); $('#btnVolverSol').onclick = () => verBanco(false);
-
-/* ---------------- 5 Cierre ---------------- */
-$('#frase').textContent = FRASE_CIERRE;
-
-/* ---------------- Entradas de cada slide ---------------- */
-const ENTRAR = [
-  () => {},
-  () => { $$('#s1 .lista li').forEach(li => li.classList.remove('v')); $('#franja').classList.remove('v');
-    $$('#listaHoy li').forEach((li, i) => despues(300 + i * 450, () => li.classList.add('v')));
-    $$('#listaCon li').forEach((li, i) => despues(2300 + i * 450, () => li.classList.add('v')));
-    despues(4600, () => $('#franja').classList.add('v')); },
-  () => { $$('#cifras2 b').forEach(b => contar(b, +b.dataset.n, 1100)); mostrarTipo('Aplicacion'); },
-  () => { reiniciarMapa(); $('#comparar').style.display = 'none'; },
-  () => { verBanco(false); pintarReglas(); $$('#solicitud .hecho').forEach(h => h.classList.remove('v')); $$('.regla').forEach(r => r.classList.remove('v')); $('#semaforo').classList.remove('v');
-    $$('#solicitud .hecho').forEach((h, i) => despues(250 + i * 330, () => h.classList.add('v')));
-    $$('.regla').forEach((r, i) => despues(3400 + i * 300, () => r.classList.add('v')));
-    despues(3400 + 14 * 300 + 300, () => $('#semaforo').classList.add('v')); },
-  () => { $$('#s5 .grande b').forEach(b => contar(b, +b.dataset.n, 1400)); }
-];
-// Acceso directo por URL: #3 abre el acto 3; #4:PLT-002 simula esa caída; #4:cmp abre la comparación; #5:banco abre el estado del banco
-const h = (location.hash || '').replace('#', '').split(':');
-const n0 = parseInt(h[0], 10);
-ir(n0 >= 1 && n0 <= slides.length ? n0 - 1 : 0);
-if (h[1] && actual === 3) despues(400, () => h[1] === 'cmp' ? $('#btnComparar').click() : simular(h[1]));
-if (h[1] === 'banco' && actual === 4) despues(400, () => verBanco(true));
-})();
-</script>
-</body>
-</html>
+## Formato
+- Estructura de carpetas: `metamodelo.json`, `reglas-consistencia.json`, `catalogos/*.json` (6), `ejemplos-error/aplicaciones.json`, `reglas.js`, `validar.js`, `pruebas.js`, `probar.js`, `salida/` (grafo.json, reporte.md, 6 `.mmd`, evidencias), `NOTAS.md`.
+- JSON con indentación de 2 espacios; código JS con comentarios breves en español.
+- Tu respuesta final: una tabla "criterio de <esperado> | resultado real | OK/FALLA" con la salida real de los comandos, y debajo la lista de desviaciones o supuestos (si no hay, "ninguno"). Sin preámbulo ni resumen.
+- Antes de entregar, repite `node validar.js`, `node validar.js ejemplos-error` y `node pruebas.js` y confirma cada fila de la tabla contra la salida real.
