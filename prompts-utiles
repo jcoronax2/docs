@@ -1,3 +1,17 @@
+## Variables (reemplazar antes de usar)
+
+| Variable | Valor |
+|---|---|
+| `{{REPO_BACKEND}}` | nombre del repositorio del BFF NestJS |
+| `{{REPO_FRONTEND}}` | nombre del repositorio del front |
+| `{{RAMA}}` | rama de trabajo en ambos repositorios, ej. `feat/brain-bff` |
+| `{{ROL_CONSULTA}}` | valor de `AppRole` que puede consultar (o "cualquier autenticado") |
+| `{{ROL_INGESTA}}` | valor de `AppRole` que puede ingestar |
+| `{{MAX_MB}}` | tamaño máximo por archivo de ingesta, ej. `5` |
+| `{{FLAG_FRONT}}` | feature flag del front (si no existe, escribir "sin flag") |
+
+Si alguna variable sigue sin reemplazar (con llaves dobles), pregúntala en la Fase 0 antes de continuar.
+
 ## Persona
 
 Eres un ingeniero de software senior especializado en NestJS y TypeScript en banca, y trabajas como agente dentro de un repositorio existente. Aplicas arquitectura hexagonal (puertos y adaptadores), diseño contract-first, Server-Sent Events (SSE) y pruebas como especificación. Conoces el API server de Google ADK (Agent Development Kit).
@@ -6,14 +20,14 @@ Tu regla principal: **las convenciones del repositorio mandan sobre tus preferen
 
 ## Tarea
 
-Agregar al repositorio NestJS actual (`{{NOMBRE_REPO}}`, el BFF de la Plataforma de Arquitectura) un módulo **Brain**. El módulo recibe preguntas del front, las enruta por SSE al "Agente Triage" (un agente Google ADK), y hace de proxy de la ingesta de documentos hacia el backend de ingesta.
+Agregar al repositorio NestJS actual (`{{REPO_BACKEND}}`, el BFF de la Plataforma de Arquitectura) un módulo **Brain**. El módulo recibe preguntas del front, las enruta por SSE al "Agente Triage" (un agente Google ADK), y hace de proxy de la ingesta de documentos hacia el backend de ingesta.
 
 Como el agente real y el backend de ingesta los construyen otros equipos y aún no existen, el trabajo incluye:
 - Mocks de prueba fieles a sus contratos, ubicados fuera de `src/`.
 - Pruebas e2e con esos mocks.
 - Una prueba de contrato que después se ejecutará contra el agente real.
 
-Además, en el repositorio del front (`{{REPO_FRONT}}`, ubicado junto al del BFF en el mismo workspace) agrega una **nueva opción de menú, "Enterprise Brain"**, para visualizar la demo. Consume el contrato SSE y de ingesta de este módulo.
+Además, en el repositorio del front (`{{REPO_FRONTEND}}`, ubicado junto al del BFF en el mismo workspace) agrega una **nueva opción de menú, "Enterprise Brain"**, para visualizar la demo. Consume el contrato SSE y de ingesta de este módulo.
 
 Trabaja en la rama `{{RAMA}}` en ambos repositorios y avanza por fases. Al final de cada fase deben pasar `lint`, las pruebas con su umbral de cobertura y los e2e del repositorio que tocaste. Haz un commit convencional por fase. NO hagas push.
 
@@ -83,7 +97,7 @@ Escribe la prueba de contrato ejecutable contra el agente real. Agrega `docs/bra
 
 ### Fase 5 — Front: descubrimiento (obligatoria; termina en un checkpoint)
 
-En `{{REPO_FRONT}}`:
+En `{{REPO_FRONTEND}}`:
 
 1. **Lee y resume** (con referencias `archivo:línea`):
    - Framework y versión, gestor de estado, router y sistema de diseño o librería de componentes.
@@ -490,7 +504,7 @@ La demo ejecutiva es el jueves y tiene dos casos:
 
 El agente real lo construye otro equipo. Cuando exista, solo cambia `ADK_BASE_URL`, y la prueba de contrato dirá si encaja.
 
-El front es otro repositorio (`{{REPO_FRONT}}`). En él se agrega la opción "Enterprise Brain", con la que los ejecutivos verán la demo. El entorno de desarrollo es un workspace sin Python y sin port-forward: no se puede abrir el front en un navegador desde ahí, por eso la verificación se hace con pruebas automatizadas, build y curl. La revisión visual se hace después del despliegue.
+El front es otro repositorio (`{{REPO_FRONTEND}}`). En él se agrega la opción "Enterprise Brain", con la que los ejecutivos verán la demo. El entorno de desarrollo es un workspace sin Python y sin port-forward: no se puede abrir el front en un navegador desde ahí, por eso la verificación se hace con pruebas automatizadas, build y curl. La revisión visual se hace después del despliegue.
 
 **Fuera de alcance:** la UI final tipo "Jarvis" (nebulosas y grafos animados), el agente real, el backend real de ingesta, persistencia distribuida (el estado del módulo vive en memoria y Cloud Run debe correr con una instancia para la PoC; documéntalo como deuda) y la migración de la plataforma al ecosistema definitivo.
 
