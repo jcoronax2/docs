@@ -13,7 +13,9 @@ Como el agente real y el backend de ingesta los construyen otros equipos y aún 
 - Pruebas e2e con esos mocks.
 - Una prueba de contrato que después se ejecutará contra el agente real.
 
-Trabaja en la rama `{{RAMA}}` y avanza por fases. Al final de cada fase deben pasar `lint`, `test:cov` (respetando el umbral de cobertura del repo) y los e2e. Haz un commit convencional por fase. NO hagas push.
+Además, en el repositorio del front (`{{REPO_FRONT}}`, ubicado junto al del BFF en el mismo workspace) agrega una **nueva opción de menú, "Enterprise Brain"**, para visualizar la demo. Consume el contrato SSE y de ingesta de este módulo.
+
+Trabaja en la rama `{{RAMA}}` en ambos repositorios y avanza por fases. Al final de cada fase deben pasar `lint`, las pruebas con su umbral de cobertura y los e2e del repositorio que tocaste. Haz un commit convencional por fase. NO hagas push.
 
 ### Fase 0 — Descubrimiento (obligatoria; termina en un checkpoint)
 
@@ -79,7 +81,26 @@ Escribe la prueba de contrato ejecutable contra el agente real. Agrega `docs/bra
 - Cómo correr el contrato contra el agente real.
 - Las variables de entorno nuevas para Cloud Run.
 
-### Fase 5 — Fallback Gemini (opcional)
+### Fase 5 — Front: descubrimiento (obligatoria; termina en un checkpoint)
+
+En `{{REPO_FRONT}}`:
+
+1. **Lee y resume** (con referencias `archivo:línea`):
+   - Framework y versión, gestor de estado, router y sistema de diseño o librería de componentes.
+   - Cómo se registra una opción de menú y su ruta.
+   - Cómo se protegen las rutas por rol.
+   - El cliente HTTP existente: base URL por ambiente, envío de cookies (`credentials`/`withCredentials`), manejo de 401 y propagación de correlation-id.
+   - Las pruebas: runner, Testing Library, umbral de cobertura y e2e.
+   - Lint, Husky, i18n y feature flags, si existen.
+2. **Recorre una pantalla existente parecida** (la del metamodelo, si existe) y úsala como plantilla.
+3. **Verifica si el cliente HTTP del front puede leer una respuesta en streaming.** Axios en el navegador no puede. Si no puede, la llamada a `/brain/ask` se hace con `fetch` + `ReadableStream`, solo en el adaptador de esta pantalla, enviando las mismas cookies, headers y base URL que el cliente existente.
+4. **Entrega** la tabla de mapeo, los componentes a crear, los riesgos (CORS y cookies entre dominios, streaming detrás de proxies) y como máximo 5 preguntas. Luego DETENTE.
+
+### Fase 6 — Front: opción "Enterprise Brain"
+
+Implementa la pantalla según "Opción Enterprise Brain en el front". Escribe pruebas de componentes con streams simulados y deja el lint y la cobertura del front en verde.
+
+### Fase 7 — Fallback Gemini (opcional)
 
 Haz esta fase solo si confirmo en la Fase 0 y `@google/genai` existe en el registro. Va detrás de un flag que por defecto está apagado.
 
@@ -99,6 +120,7 @@ Haz esta fase solo si confirmo en la Fase 0 y `@google/genai` existe en el regis
 - Modificar módulos existentes salvo para registrar el `BrainModule`, excluir la ruta SSE del filtro de respuestas si hace falta, y actualizar Swagger o los e2e de contrato.
 - Aceptar el `userId` desde el cliente: se toma del usuario autenticado.
 - Exponer stack traces ni mensajes internos de upstream al cliente.
+- En el front: agregar dependencias de gráficos, de SSE o de UI que el repo no tenga, si se puede resolver con lo existente o con SVG nativo; ni modificar pantallas existentes, salvo para registrar la opción de menú y la ruta.
 
 Si una prueba falla, corrige la implementación, no la prueba. Si la prueba contradice esta especificación, repórtalo.
 
@@ -251,7 +273,7 @@ Usa el mecanismo de configuración y validación existente. Variables nuevas:
 | `BRAIN_INGEST_MAX_FILE_BYTES` | 5242880 |
 | `BRAIN_METAMODEL_VERSION` | `1.0.0` (solo si no hay fuente en el caso de uso de metamodelo) |
 
-Si se implementa la Fase 5, se suman `AI_GATEWAY_BASE_URL`, `AI_GATEWAY_API_KEY`, `GEMINI_MODEL` y `GRAPH_API_BASE_URL`.
+Si se implementa la Fase 7, se suman `AI_GATEWAY_BASE_URL`, `AI_GATEWAY_API_KEY`, `GEMINI_MODEL` y `GRAPH_API_BASE_URL`.
 
 Los booleanos se parsean solo desde `true`, `false`, `1` y `0`. Con zod NO uses `z.coerce.boolean()`, que convierte `"false"` en `true`.
 
@@ -336,6 +358,71 @@ Los booleanos se parsean solo desde `true`, `false`, `1` y `0`. Con zod NO uses 
 - `ADR-101-paus.md`: aplicación PAUS, runtime Java 17, depende de [Core Tarjetas, Pagos PSE], estado `accepted`.
 - `paus-contexto.mmd`: `flowchart LR` con PAUS → Autenticador Keycloak y Canal Digital Personas → PAUS.
 
+### Opción "Enterprise Brain" en el front
+
+**Ubicación y acceso**
+- Nueva opción de menú "Enterprise Brain" con su ruta (por ejemplo `/enterprise-brain`), registrada como las demás.
+- Visible y accesible solo para usuarios autenticados con `{{ROL_CONSULTA}}`. El panel de ingesta solo se muestra con `{{ROL_INGESTA}}`; el BFF valida igual, esto es solo UX.
+- Si el repo tiene feature flags, detrás del flag `{{FLAG_FRONT}}`.
+- Textos en español y en el sistema de i18n del repo, si existe.
+
+**Estructura** (componentes separados, imitando la convención del repo)
+1. **Encabezado:**
+   - Etiqueta `metamodelo {metamodelVersion} · snapshot {snapshot}`, desde `GET /brain/version`. Se refresca al montar la pantalla y al terminar cada ingesta.
+   - Botón "Nueva conversación": genera un `conversationId` nuevo con `crypto.randomUUID()` y limpia el chat y la evidencia.
+2. **Panel de consulta:**
+   - Historial de mensajes con burbujas de usuario y de agente.
+   - Botones de preguntas sugeridas:
+     - ¿Cuántas aplicaciones usan Java 17?
+     - ¿Qué runtime usa PAUS?
+     - ¿Qué impacto tiene migrar Canal Digital Personas?
+   - Campo de texto (máximo 2000 caracteres), botón Enviar y botón Detener.
+   - **Streaming:** el texto del agente aparece token a token. Mientras hay una respuesta en curso, Enviar está deshabilitado. Detener aborta la petición con `AbortController` y marca la respuesta como "cancelada".
+   - Debajo de cada respuesta del agente, etiquetas pequeñas con:
+     - Las tools usadas (eventos `tool`).
+     - La cobertura según `coverage.source`:
+       - `graph`: "Respaldada por el grafo" (estilo de éxito).
+       - `memory`: "Desde memoria de la conversación" (estilo de advertencia).
+       - `none`: "Sin información en el metamodelo" (estilo de advertencia).
+     - `v{metamodelVersion} · snapshot {snapshot}`.
+     - El tiempo al primer token y el total, en ms.
+   - **Errores:**
+     - Si llega un evento `error`, la burbuja se marca como error y muestra un mensaje amigable según el código:
+       - `AGENT_UNAVAILABLE`: "El agente no está disponible en este momento."
+       - `AGENT_TIMEOUT`: "El agente tardó demasiado en responder."
+       - `AGENT_ERROR` e `INTERNAL`: "No fue posible completar la respuesta."
+     - El texto ya recibido se conserva.
+     - Un 401 sigue el manejo global del repo (redirección a login).
+3. **Panel de evidencia:**
+   - Grafo del subgrafo acumulado de la última respuesta (eventos `evidence`), en SVG nativo o con la librería de gráficos que el repo ya tenga.
+   - Los nodos se colorean por `type` (Application, Runtime, ADR, otros) y muestran su `label`; las relaciones muestran su `type`.
+   - Un layout circular simple es suficiente; no agregues librerías de grafos.
+   - Sin evidencia, muestra el texto "Sin evidencia: el agente no consultó el grafo".
+4. **Panel de ingesta** (solo con `{{ROL_INGESTA}}`):
+   - Selector de archivos múltiple que acepta `.md,.mmd,.dsl,.drawio,.xml`, y botón "Cargar".
+   - Hace `POST /brain/ingest` (multipart, campo `files`) y luego polling de `GET /brain/ingest/:jobId` cada 500 ms, con un máximo de 60 s.
+   - Muestra `job {jobId} · {status}` y, al completar, `+{nodesAdded} nodos, +{edgesAdded} relaciones · snapshot {snapshot}`. Luego refresca la versión del encabezado.
+   - Los errores 413, 415 y 4xx o 5xx se muestran con su mensaje.
+
+**Cliente SSE del front** (un adaptador o servicio aislado, con pruebas)
+- `POST {baseUrl}/brain/ask` con cuerpo `{question, conversationId}`, las cookies de sesión y los headers del cliente existente.
+- Lee el body con `ReadableStream`. Separa eventos por `\n\n`; de cada evento toma las líneas `data:`, las une y las parsea como JSON. Ignora los comentarios `: ping`.
+- Despacha cada evento por su campo `type`. Tolera eventos partidos entre dos chunks.
+- Si la respuesta no es 2xx, lanza un error tipado con el status.
+
+**Pruebas del front** (con el runner del repo)
+- **Cliente SSE:**
+  - Eventos completos.
+  - Un evento partido en dos chunks.
+  - Un heartbeat.
+  - Una respuesta no-2xx.
+  - Una cancelación.
+- **Pantalla** (con el cliente simulado):
+  - Una respuesta con tokens, `tool`, `evidence` y `coverage` source `graph` pinta el texto concatenado, las etiquetas y los nodos del grafo.
+  - Un evento `error` `AGENT_UNAVAILABLE` muestra el mensaje amigable y conserva el texto previo.
+  - Sin `{{ROL_INGESTA}}`, el panel de ingesta no se renderiza.
+  - Al completar una ingesta se refresca la versión.
+
 ### Pruebas
 
 **Unitarias (Jest, `*.spec.ts` junto al código)**
@@ -387,7 +474,9 @@ Los booleanos se parsean solo desde `true`, `false`, `1` y `0`. Con zod NO uses 
 - [ ] Swagger documenta las 4 rutas: `text/event-stream` con el esquema de cada `BrainEvent`, multipart y códigos de error. El e2e de contrato OpenAPI pasa.
 - [ ] El stream SSE no se rompe por el filtro de respuestas, la compresión ni el exception filter.
 - [ ] Nombres de rutas, eventos, campos JSON y textos coinciden con esta especificación. En caso de duda sobre el nombre de un campo JSON, usa el nombre escrito aquí entre comillas invertidas; nunca lo traduzcas ni lo sustituyas por un sinónimo.
-- [ ] Hay un commit convencional por fase y ningún push.
+- [ ] La Fase 5 (descubrimiento del front) se entregó y se detuvo esperando confirmación.
+- [ ] El front tiene la opción de menú "Enterprise Brain" protegida por rol. Las pruebas, el lint y el build del front pasan con su umbral de cobertura, y la pantalla consume solo los contratos de este documento.
+- [ ] Hay un commit convencional por fase, en el repositorio correspondiente, y ningún push.
 
 ## Contexto
 
@@ -401,14 +490,14 @@ La demo ejecutiva es el jueves y tiene dos casos:
 
 El agente real lo construye otro equipo. Cuando exista, solo cambia `ADK_BASE_URL`, y la prueba de contrato dirá si encaja.
 
-El front es otro repositorio y consumirá el contrato SSE documentado aquí. El entorno de desarrollo es un workspace sin Python y sin port-forward, por eso la verificación se hace con pruebas automatizadas y curl.
+El front es otro repositorio (`{{REPO_FRONT}}`). En él se agrega la opción "Enterprise Brain", con la que los ejecutivos verán la demo. El entorno de desarrollo es un workspace sin Python y sin port-forward: no se puede abrir el front en un navegador desde ahí, por eso la verificación se hace con pruebas automatizadas, build y curl. La revisión visual se hace después del despliegue.
 
-**Fuera de alcance:** cambios en el front, el agente real, el backend real de ingesta, persistencia distribuida (el estado del módulo vive en memoria y Cloud Run debe correr con una instancia para la PoC; documéntalo como deuda) y la migración de la plataforma al ecosistema definitivo.
+**Fuera de alcance:** la UI final tipo "Jarvis" (nebulosas y grafos animados), el agente real, el backend real de ingesta, persistencia distribuida (el estado del módulo vive en memoria y Cloud Run debe correr con una instancia para la PoC; documéntalo como deuda) y la migración de la plataforma al ecosistema definitivo.
 
 ## Formato
 
 - Trabaja creando archivos y ejecutando comandos en el repo; no pegues el código en el chat.
-- **En la Fase 0** responde con estas secciones:
+- **En la Fase 0 y en la Fase 5** responde con estas secciones:
   1. Convenciones encontradas, con `archivo:línea`.
   2. Tabla de mapeo de piezas a archivos.
   3. Dependencias nuevas, con justificación y disponibilidad en el registro.
