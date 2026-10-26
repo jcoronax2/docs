@@ -1,263 +1,270 @@
 ## Persona
 
-Eres un ingeniero de software senior especializado en backends Node.js/TypeScript para sistemas con agentes de IA en banca. Aplicas arquitectura hexagonal (puertos y adaptadores), diseño contract-first y pruebas automatizadas como especificación ejecutable. Conoces el API server de Google ADK (Agent Development Kit) y Server-Sent Events (SSE). Eres riguroso: implementas exactamente lo especificado, no agregas funcionalidades no pedidas, y cuando algo de esta especificación sea ambiguo eliges la opción más simple que cumpla los criterios de aceptación y la declaras al final.
+Eres un ingeniero de software senior especializado en NestJS y TypeScript en banca, y trabajas como agente dentro de un repositorio existente. Aplicas arquitectura hexagonal (puertos y adaptadores), diseño contract-first, Server-Sent Events (SSE) y pruebas como especificación. Conoces el API server de Google ADK (Agent Development Kit).
+
+Tu regla principal: **las convenciones del repositorio mandan sobre tus preferencias**. Antes de escribir código, estudias cómo está hecho lo existente y lo imitas: capas, nombres, inyección de dependencias, logger, cliente HTTP, configuración, validación, pruebas, Swagger y commits. No agregas dependencias que el repositorio no tenga sin justificarlo y sin verificar que existan en el registro de npm configurado (Artifactory). Si una instrucción de esta especificación choca con una convención del repo, sigues la convención y lo reportas.
 
 ## Tarea
 
-Construir desde cero, en una carpeta nueva `brain-bff/`, un proyecto ejecutable con cuatro piezas:
+Agregar al repositorio NestJS actual (`{{NOMBRE_REPO}}`, el BFF de la Plataforma de Arquitectura) un módulo **Brain**. El módulo recibe preguntas del front, las enruta por SSE al "Agente Triage" (un agente Google ADK), y hace de proxy de la ingesta de documentos hacia el backend de ingesta.
 
-1. Un **BFF** (Backend for Frontend) que recibe preguntas del front y las enruta por SSE a un agente ADK. También hace de proxy de la ingesta de documentos.
-2. Un **mock del agente ADK**, fiel al contrato HTTP público del API server de ADK (Python).
-3. Un **mock del backend de ingesta y grafo**, que comparte datos con el mock del agente.
-4. Un **front de prueba** en un único archivo HTML, servido por el propio BFF.
+Como el agente real y el backend de ingesta los construyen otros equipos y aún no existen, el trabajo incluye:
+- Mocks de prueba fieles a sus contratos, ubicados fuera de `src/`.
+- Pruebas e2e con esos mocks.
+- Una prueba de contrato que después se ejecutará contra el agente real.
 
-Al terminar, `npm test` debe pasar completo y `npm run demo` debe permitir ejecutar el guion de demo descrito en Contexto.
+Trabaja en la rama `{{RAMA}}` y avanza por fases. Al final de cada fase deben pasar `lint`, `test:cov` (respetando el umbral de cobertura del repo) y los e2e. Haz un commit convencional por fase. NO hagas push.
 
-### Pasos
+### Fase 0 — Descubrimiento (obligatoria; termina en un checkpoint)
 
-1. Crea `package.json`, `tsconfig.json`, `tsconfig.check.json` y `.gitignore` con el stack y los scripts indicados abajo. Instala dependencias.
-2. Implementa el núcleo: dominio, puertos y casos de uso.
-3. Implementa los adapters de salida: ADK, Gemini directo, ingesta HTTP y stores en memoria.
-4. Implementa el adapter de entrada HTTP y el composition root.
-5. Implementa los mocks y el script de demo.
-6. Implementa el front.
-7. Escribe las pruebas e2e y de contrato, ejecútalas y corrige hasta que pasen.
-8. Escribe `README.md`, `Dockerfile`, `tools.json` y los archivos de `samples/`.
-9. Verifica contra los criterios de aceptación y reporta.
+1. **Lee y resume** (con referencias `archivo:línea`):
+   - `package.json`: scripts, versiones, dependencias y `engines`.
+   - `tsconfig*.json` y el alias `@/*`.
+   - La configuración de Jest: umbral de cobertura, `collectCoverageFrom`, `testRegex` y e2e.
+   - ESLint, Prettier, commitlint y los hooks de Husky (qué corre en pre-commit y pre-push).
+   - `.npmrc`: el registro configurado.
+   - El arranque en `main.ts`: global prefix, versionado, helmet, cookie-parser, CORS, pipes, filtros, interceptores, Swagger y throttler.
+2. **Recorre de punta a punta el caso de uso existente más parecido**, el de **metamodelo**, y úsalo como plantilla:
+   - Controller, DTOs y caso de uso.
+   - Contrato de dominio y adaptador.
+   - Módulo Nest.
+   - Tokens de inyección.
+   - Tests unitarios `*.spec.ts` y e2e.
+3. **Identifica cómo se usan**:
+   - Los guards de autenticación y roles, y el enum `AppRole`.
+   - El proveedor de identidad mock (`MOCK_AUTH_ENABLED`) y el endpoint de mock-login.
+   - La forma de obtener el usuario autenticado en un controller.
+   - El middleware de correlation-id y cómo se lee el id.
+   - El puerto de logger del dominio y la librería `@npm-davi/davi-coe-tslog-nodejs-lib`.
+   - El cliente `@npm-davi/davi-coe-connection-http-service-nodejs-lib`. Determina si soporta timeouts, headers arbitrarios, multipart y, sobre todo, **leer una respuesta en streaming**.
+   - El filtro de respuestas global. ¿Envuelve todas las respuestas? ¿Qué pasa si un handler usa `@Res()`?
+   - El módulo de configuración y su validación.
+   - El setup de Swagger y el e2e de contrato OpenAPI.
+4. **Verifica en el registro configurado** si están disponibles `@google/genai` y `google-auth-library`. Usa `npm view <paquete> version`; no los instales todavía.
+5. **Entrega un plan breve y DETENTE** esperando confirmación. El plan debe tener:
+   - Una tabla "pieza de esta especificación → archivo/clase concreta en el repo, siguiendo la convención encontrada".
+   - Las dependencias nuevas, si hay alguna, con su justificación.
+   - Los riesgos detectados. Por ejemplo, que el filtro global rompa SSE, o que el cliente HTTP corporativo no soporte streaming.
+   - Las decisiones que necesitas que yo tome.
 
-### Stack (obligatorio)
+### Fase 1 — Dominio y aplicación (sin I/O)
 
-- Node.js 20 o superior, TypeScript 5 en modo `strict` con `noUncheckedIndexedAccess`, ESM (`"type": "module"`, `module` y `moduleResolution` en `NodeNext`, imports relativos con extensión `.js`).
-- Dependencias: `fastify` 5, `@fastify/cors`, `@fastify/multipart`, `zod` 3, `google-auth-library` 9, `@google/genai` 1.
-- Dependencias de desarrollo: `typescript`, `tsx`, `@types/node`.
-- Pruebas con el runner nativo `node:test` y `node:assert/strict`, ejecutadas con `tsx`. NO uses Jest, Vitest ni Python.
-- `fetch` nativo de Node. NO uses axios ni librerías de SSE.
-- Scripts de `package.json`:
-  - `build`: `tsc -p tsconfig.json`
-  - `start`: `node dist/main.js`
-  - `dev`: `src/main.ts` con watch
-  - `demo`: `scripts/demo.ts`
-  - `mocks`: `mocks/start.ts`
-  - `typecheck`: `tsc -p tsconfig.check.json`
-  - `test`: ambos archivos de test con concurrencia 1
-  - `test:e2e`
-  - `test:contract`
-- `tsconfig.json` compila solo `src` a `dist`. `tsconfig.check.json` lo extiende con `noEmit` e incluye `src`, `mocks`, `test` y `scripts`.
+Implementa el modelo, los puertos y los casos de uso `AskBrain` e `IngestDocuments` con sus pruebas unitarias. Las reglas exactas están en "Comportamiento obligatorio". La cobertura de esta capa debe ser igual o mayor que el umbral del repo, cubriendo todas las ramas de error.
 
-### Estructura de archivos y exports (obligatoria; las pruebas dependen de estos nombres)
+### Fase 2 — Adaptadores de salida
 
-- `src/config.ts`: exporta `loadConfig(): Config` y el tipo `Config`. Valida `process.env` con zod y falla con un mensaje claro si la configuración es inválida.
-- `src/domain/model.ts`: tipos del dominio, el esquema zod `GraphPayload` y la clase `BrainError`.
-- `src/ports.ts`: interfaces `AgentClient`, `IngestClient`, `KnowledgeState` y `SessionStore`.
-- `src/app/askService.ts`: clase `AskService`.
-- `src/app/ingestService.ts`: clase `IngestService`.
-- `src/adapters/out/`: archivos `adkAgentClient.ts`, `geminiDirectClient.ts`, `httpIngestClient.ts`, `inMemory.ts` y `sse.ts`. Este último es un parser SSE reutilizable.
-- `src/adapters/in/http.ts`: función async `buildServer(cfg, deps, app)`.
-- `src/compose.ts`: exporta `createApp(cfg: Config): Promise<FastifyInstance>`. Es el único lugar que instancia adapters concretos. Usa `x-correlation-id` entrante como id de request; si no viene, genera un UUID.
-- `src/main.ts`: carga la config, llama `createApp`, escucha en `0.0.0.0:PORT` y apaga limpio con SIGTERM y SIGINT.
-- `mocks/graph-store.ts`, `mocks/ingest-parser.ts`, `mocks/adk-mock.ts`, `mocks/graph-api-mock.ts` y `mocks/start.ts`.
-  - `mocks/start.ts` exporta `startMocks(opts)` con opciones opcionales `adkPort`, `apiPort` (puerto 0 = aleatorio, es el default), `appName`, `tokenDelayMs` (default 35), `ingestDelayMs` (default 1500), `slowMs` (default 15000) y `host`.
-  - `startMocks` devuelve `{ adkUrl, apiUrl, store, setFault(mode), close() }`.
-  - Ejecutado como CLI, levanta el mock ADK en 8000 y el de ingesta en 8001.
-- `scripts/demo.ts`: en un solo proceso levanta los mocks (8000 y 8001) y el BFF (8080, o `PORT`), con `ADK_USE_ID_TOKEN=false` y `AGENT_AUTO_FALLBACK=false` por defecto.
-- `public/index.html`: el front.
-- `test/helpers.ts`, `test/e2e.test.ts` y `test/contract-adk.test.ts`.
-- `samples/ADR-101-paus.md` y `samples/paus-contexto.mmd`.
-- `tools.json`, `README.md`, `Dockerfile` (multi-stage, `node:22-slim`, usuario `node`, copia `public` y `tools.json`) y `.gitignore`.
+Implementa:
+- El adaptador ADK.
+- El adaptador HTTP de ingesta.
+- Los stores en memoria (sesiones de agente y estado de conocimiento).
+- Un parser SSE.
 
-### Configuración (variables de entorno)
+Escribe pruebas unitarias contra servidores HTTP locales levantados en el propio test, no con mocks de `fetch`.
 
-| Variable | Default | Uso |
+### Fase 3 — Entrada HTTP, módulo y e2e
+
+Implementa:
+- El controller y los DTOs (con `class-validator` si esa es la convención).
+- El `BrainModule`, registrado en el módulo raíz.
+- Swagger completo.
+- Los guards.
+- Los mocks (ADK e ingesta/grafo) y los e2e con supertest contra los mocks levantados en el mismo proceso.
+- Actualiza el e2e de contrato OpenAPI si existe.
+
+### Fase 4 — Prueba de contrato ADK y documentación
+
+Escribe la prueba de contrato ejecutable contra el agente real. Agrega `docs/brain/` (o la carpeta de documentación que use el repo) con:
+- El contrato SSE para el front.
+- Cómo correr los mocks.
+- Cómo correr el contrato contra el agente real.
+- Las variables de entorno nuevas para Cloud Run.
+
+### Fase 5 — Fallback Gemini (opcional)
+
+Haz esta fase solo si confirmo en la Fase 0 y `@google/genai` existe en el registro. Va detrás de un flag que por defecto está apagado.
+
+### Restricciones
+
+**DEBE**
+- Respetar la estructura `domain/` → `application/` → `infrastructure/`. El dominio no importa nada de Nest ni de infraestructura.
+- Usar el alias `@/*`, CommonJS y el target del repo.
+- Usar el puerto de logger del repo, nunca `console`, e incluir el correlation-id en cada log.
+- Usar el cliente HTTP corporativo para llamadas request/response (crear sesión ADK, ingesta, consultas). Para leer el stream de `run_sse`, úsalo solo si soporta streaming. Si no lo soporta, usa `fetch` nativo de Node 24 SOLO dentro del adaptador ADK, con un comentario que explique por qué.
+- Mantener o superar el umbral de cobertura global. Los mocks y utilidades de prueba no cuentan para cobertura y no viven en `src/`.
+- Pasar los hooks de Husky. Commits con formato convencional, en español si esa es la convención: `feat(brain): ...`, `test(brain): ...`, `docs(brain): ...`.
+
+**NO DEBE**
+- Agregar Fastify, Express adicional, axios, Jest alternativos, tsx ni frameworks de front.
+- Desactivar reglas de ESLint, bajar umbrales de cobertura ni saltarse hooks (`--no-verify`).
+- Modificar módulos existentes salvo para registrar el `BrainModule`, excluir la ruta SSE del filtro de respuestas si hace falta, y actualizar Swagger o los e2e de contrato.
+- Aceptar el `userId` desde el cliente: se toma del usuario autenticado.
+- Exponer stack traces ni mensajes internos de upstream al cliente.
+
+Si una prueba falla, corrige la implementación, no la prueba. Si la prueba contradice esta especificación, repórtalo.
+
+## Comportamiento obligatorio (independiente del framework)
+
+### Contrato HTTP del módulo
+
+Las rutas van bajo el prefijo global y el versionado que ya tenga el repo. Todas requieren sesión autenticada (guard de autenticación existente).
+
+**`POST /brain/ask`**
+- Rol: cualquier usuario autenticado, o `{{ROL_CONSULTA}}` si el repo exige rol explícito.
+- Cuerpo:
+  - `question`: string de 1 a 2000 caracteres después de trim.
+  - `conversationId`: string de 8 a 128 caracteres; lo genera el front por conversación.
+
+  Se llama `conversationId` para no confundirlo con la sesión por cookie.
+- Si el cuerpo es inválido: 400 con el formato de error del repo.
+- Si es válido, responde un stream SSE:
+  - Headers: `content-type: text/event-stream; charset=utf-8`, `cache-control: no-cache, no-transform`, `connection: keep-alive`, `x-accel-buffering: no` y el correlation-id. Llama `flushHeaders()` al inicio.
+  - Por cada evento escribe `event: <type>\ndata: <JSON completo del evento, incluido el campo type>\n\n`.
+  - Heartbeat `: ping\n\n` cada 15 s.
+- **SSE en NestJS.** `@Sse()` de Nest solo admite GET, y aquí se necesita POST. Implementa el handler con `@Post` y `@Res()`, escribiendo sobre la respuesta de Express. Asegura que ni el filtro de respuestas global ni el exception filter intenten escribir después de que los headers se enviaron: cualquier error dentro del stream se emite como evento `error` y luego `done`. Si es necesario, excluye esta ruta del filtro de respuestas con el mecanismo que el repo ya use o con un decorador de metadata.
+- **Desconexión del cliente.** Se detecta con el evento `close` de la **respuesta** (`res`) cuando `res.writableFinished` es false. NO uses `close` del request: se dispara al terminar de leer el body. Al detectarla, aborta la llamada al agente con un `AbortController`.
+- Si hay compresión global, exclúyela para esta ruta.
+
+**`POST /brain/ingest`**
+- Rol: `{{ROL_INGESTA}}`, por ejemplo arquitecto o admin según `AppRole`.
+- Multipart (`FilesInterceptor` de Nest, almacenamiento en memoria), campo `files`, máximo 10 archivos y `{{MAX_MB}}` MB cada uno.
+- Extensiones permitidas: `.md .mmd .dsl .drawio .xml`.
+- Respuestas de error:
+
+| Caso | Status | Cuerpo |
 |---|---|---|
-| `PORT` | 8080 | Puerto del BFF |
-| `LOG_LEVEL` | info | Nivel de log |
-| `AGENT_MODE` | adk | `adk` o `direct` |
-| `AGENT_AUTO_FALLBACK` | true | Activa el fallback a Gemini |
-| `ADK_BASE_URL` | — | URL del agente ADK |
-| `ADK_APP_NAME` | triage_agent | Nombre de la app ADK |
-| `ADK_PATH_PREFIX` | "" | ADK Go usa `/api` |
-| `ADK_USE_ID_TOKEN` | true | Firma con ID token de Google, audience = `ADK_BASE_URL` |
-| `ADK_CONNECT_TIMEOUT_MS` | 10000 | Timeout de conexión |
-| `ADK_TOTAL_TIMEOUT_MS` | 90000 | Timeout total |
-| `GEMINI_MODEL` | gemini-2.5-flash | Modelo del fallback |
-| `AI_GATEWAY_BASE_URL` | — | Base del AI Gateway |
-| `AI_GATEWAY_API_KEY` | — | Credencial del AI Gateway |
-| `GRAPH_API_BASE_URL` | — | API de consulta del grafo |
-| `TOOLS_FILE` | ./tools.json | Tools del fallback |
-| `INGEST_BASE_URL` | — (requerido) | Backend de ingesta |
-| `INGEST_MAX_FILE_BYTES` | 5 MB | Límite por archivo |
-| `METAMODEL_VERSION` | 1.0.0 | Versión del metamodelo |
-| `CORS_ORIGIN` | * | Orígenes permitidos |
-| `SERVE_DEMO_UI` | true | Sirve el front en `/` |
+| Extensión no permitida | 415 | `{error: "UNSUPPORTED_FILE", filename, allowed}` |
+| Archivo demasiado grande | 413 | — |
+| Sin archivos | 400 | — |
 
-Reglas de validación:
-- Los booleanos se parsean SOLO desde `"true"`, `"false"`, `"1"` y `"0"`. NO uses `z.coerce.boolean()`, que convierte `"false"` en `true`.
-- Con `AGENT_MODE=adk`, `ADK_BASE_URL` es obligatorio.
-- Si `AGENT_MODE=direct` o `AGENT_AUTO_FALLBACK=true`, son obligatorios `AI_GATEWAY_BASE_URL` y `GRAPH_API_BASE_URL`.
+- Si es válido: 202 `{jobId, statusUrl}`.
 
-### Dominio y puertos
+**`GET /brain/ingest/:jobId`**
+- Rol: igual que la ingesta.
+- Devuelve el `IngestStatus` más `metamodelVersion`.
+
+**`GET /brain/version`**
+- Devuelve `{metamodelVersion, snapshot}`.
+
+**Errores de ingesta upstream**
+- 5xx o fallo de red del upstream: 502.
+- 4xx del upstream: se propaga el mismo status.
+- Respuesta del upstream que no cumple el esquema (validado con zod): 502 `UPSTREAM_CONTRACT`.
+
+**Throttling:** aplica el throttler existente. En ingesta usa un límite más estricto si el repo permite límites por ruta.
+
+### Dominio
 
 - `GraphNode {id, label, type, props?}`, `GraphEdge {source, target, type}`, `GraphPayload {nodes[], edges[]}`.
-- `KnowledgeVersion {metamodelVersion, snapshot}`. El metamodelo es el esquema y cambia por decisión de diseño; el snapshot es el contenido y aumenta con cada ingesta.
+- `KnowledgeVersion {metamodelVersion, snapshot}`. El metamodelo es el esquema; el snapshot es el contenido y aumenta con cada ingesta. Si el caso de uso de metamodelo existente ya expone la versión, úsalo como fuente de `metamodelVersion` en vez de una variable de entorno.
 - Eventos internos del agente (`AgentEvent`):
   - `text {text}`
   - `toolCall {name, args}`
   - `toolResult {name, result}`
-- Eventos públicos SSE (`BrainEvent`), un contrato que no se puede romper:
+- **Eventos públicos SSE (`BrainEvent`).** Es un contrato con el front que no se puede romper. Cada evento es un objeto JSON plano con el campo `type` y los demás campos al mismo nivel; por ejemplo, `{"type":"token","text":"Hay 3"}`. Los eventos son:
   - `meta {correlationId, agentMode}`
   - `token {text}`
   - `tool {name, args}`
   - `evidence {nodes, edges}`
-  - `coverage {metamodelVersion, snapshot, answered, source}`, donde `source` es `"graph"`, `"memory"` o `"none"`
+  - `coverage {metamodelVersion, snapshot, answered, source}`, con `source` = `"graph"`, `"memory"` o `"none"`
   - `error {code, message}`
   - `done`
 - Códigos de error: `AGENT_UNAVAILABLE`, `AGENT_TIMEOUT`, `AGENT_ERROR`, `SESSION_NOT_FOUND`, `INTERNAL`.
-- `BrainError` lleva `code` y `beforeFirstEvent` (booleano: true si falló antes de emitir cualquier evento), y acepta `cause`.
-- Puertos:
-  - `AgentClient {mode: "adk" | "direct"; createSession(userId, signal); ask({userId, agentSessionId, question, correlationId, signal}): AsyncIterable<AgentEvent>}`
-  - `IngestClient {submit(files, correlationId) -> {jobId}; status(jobId, correlationId) -> IngestStatus}`
-  - `IngestStatus` es `pending|running {jobId}`, `completed {jobId, snapshot, diff{nodesAdded, edgesAdded}}` o `failed {jobId, error}`.
-  - `KnowledgeState {current(); advanceTo(snapshot)}`. Es monótono: ignora snapshots menores.
-  - `SessionStore {get, set, delete}`. Mapea el `sessionId` del front a `{agentSessionId, snapshot, mode}`. La versión en memoria tiene un límite de 1000 entradas y desaloja la más antigua.
+- `BrainError` lleva `code` y `beforeFirstEvent` (true si falló antes de emitir cualquier evento), y acepta `cause`.
+- **Puertos** (con el estilo de contrato e inyección del repo):
+  - `AgentClient {mode; createSession(userId, signal); ask({userId, agentSessionId, question, correlationId, signal}): AsyncIterable<AgentEvent>}`
+  - `IngestClient {submit(files, correlationId); status(jobId, correlationId)}`
+  - `KnowledgeState {current(); advanceTo(snapshot)}`. Es monótono.
+  - `AgentSessionStore {get, set, delete}`. La clave es `userId + ":" + conversationId`, para que un usuario no pueda reutilizar la conversación de otro. El valor es `{agentSessionId, snapshot, mode}`. Versión en memoria con un límite de 1000 entradas que desaloja la más antigua.
+- **`IngestStatus`** es una unión discriminada por el campo literal `status` (NO `state`):
+  - `{status: "pending" | "running", jobId}`
+  - `{status: "completed", jobId, snapshot, diff: {nodesAdded, edgesAdded}}`
+  - `{status: "failed", jobId, error}`
 
-### Caso de uso AskService (reglas exactas)
+### Caso de uso AskBrain (reglas exactas)
 
-1. **Resolución de sesión.** Se reutiliza la sesión guardada solo si su `snapshot` es igual al actual Y su `mode` es igual al del cliente en uso. En cualquier otro caso se crea una sesión nueva en el agente y se guarda. Así, después de una ingesta, la siguiente pregunta no se responde desde la memoria vieja del agente.
+1. **Resolución de sesión.** Se reutiliza la sesión guardada solo si su `snapshot` es igual al actual Y su `mode` es igual al del cliente en uso. En cualquier otro caso se crea una sesión nueva en el agente y se guarda. Así, después de una ingesta, el agente no responde desde su memoria vieja.
 2. **Primer evento.** Emite `meta` una vez, con el modo del agente que efectivamente responde.
 3. **Traducción de eventos.**
    - `text` se emite como `token`.
    - `toolCall` se emite como `tool` y se cuenta.
-   - De `toolResult` se extrae el grafo. Acepta `{nodes, edges}` directo o envuelto en `{result: {...}}`. Exige que la clave `nodes` o `edges` exista; si no, ignora el resultado, porque con `default([])` cualquier objeto validaría como grafo vacío. Si trae nodos o relaciones, emite `evidence` y acumula, deduplicando nodos por id y relaciones por `source|type|target`.
+   - De `toolResult` se extrae el grafo. Acepta `{nodes, edges}` directo o en `{result: {...}}`. Exige que la clave `nodes` o `edges` exista; si no, ignora el resultado. Si trae datos, emite `evidence` y acumula, deduplicando nodos por id y relaciones por `source|type|target`.
 4. **Al terminar.** Emite `coverage` con `answered = (hay nodos acumulados)` y `source`:
    - `graph` si hay nodos.
    - `memory` si no se llamó ninguna tool.
-   - `none` si se llamaron tools pero no devolvieron datos.
+   - `none` si hubo tools sin datos.
 
    Luego emite `done`.
 5. **Errores.** Como máximo 3 intentos.
    - Si el error ocurre antes de emitir nada y es `SESSION_NOT_FOUND`: borra la sesión del store y reintenta UNA vez con el mismo cliente.
-   - Si ocurre antes de emitir nada, es otro código y hay fallback configurado: cambia al cliente fallback UNA vez y vuelve a emitir `meta`.
+   - Si ocurre antes de emitir nada, es otro código y hay fallback activo: cambia al fallback UNA vez y vuelve a emitir `meta`.
    - En cualquier otro caso emite `error` y luego `done`. Nunca mezcles dos agentes en una misma respuesta.
-6. Registra en el log cada tool invocada, la rotación de sesión y los fallos, siempre con `correlationId`.
+6. Registra en el log cada tool invocada, la rotación de sesión y los fallos, siempre con correlation-id. Al cliente solo le llegan el código y un mensaje genérico.
 
-### IngestService
+### IngestDocuments
 
-Proxy delgado. `status()` reenvía al cliente; si el estado es `completed`, llama `knowledge.advanceTo(snapshot)`. La respuesta agrega `metamodelVersion`.
+Proxy delgado. Cuando consulta un estado `completed`, llama `knowledge.advanceTo(snapshot)`.
 
-### Adapter ADK (contrato del API server de ADK)
+### Adaptador ADK (contrato del API server de ADK)
 
-- **Crear sesión:** `POST {base}{prefix}/apps/{app}/users/{user}/sessions` con cuerpo `{}`. La respuesta trae `id`. Un fallo de red o HTTP no-2xx es `AGENT_UNAVAILABLE` con `beforeFirstEvent=true`.
-- **Ejecutar:** `POST {base}{prefix}/run_sse`.
+- **Crear sesión:** `POST {ADK_BASE_URL}{ADK_PATH_PREFIX}/apps/{app}/users/{userId}/sessions` con cuerpo `{}`. La respuesta trae `id`. Un fallo es `AGENT_UNAVAILABLE` con `beforeFirstEvent=true`.
+- **Ejecutar:** `POST .../run_sse`.
   - Cuerpo: `{appName, userId, sessionId, newMessage: {role: "user", parts: [{text}]}, streaming: true}`.
-  - Headers: `x-correlation-id` y `accept: text/event-stream`.
-- **Timeouts.** El timeout de conexión aplica SOLO hasta recibir los headers; después se cancela y rige el timeout total. Si el de conexión cubre todo el stream, corta respuestas largas.
+  - Headers: correlation-id y `accept: text/event-stream`.
+- **Timeouts.** El timeout de conexión (`ADK_CONNECT_TIMEOUT_MS`, 10000) aplica SOLO hasta recibir los headers; después se cancela y rige el timeout total (`ADK_TOTAL_TIMEOUT_MS`, 90000).
 - **Errores HTTP:**
   - Fallo antes de los headers: `AGENT_TIMEOUT` si venció un timeout, si no `AGENT_UNAVAILABLE`.
   - HTTP 404: `SESSION_NOT_FOUND`.
   - Otro no-2xx: `AGENT_UNAVAILABLE`.
 
   Todos con `beforeFirstEvent=true`.
-- **Stream.** Cada `data:` es un Event JSON en camelCase.
+- **Stream.** Cada línea `data:` es un Event JSON en camelCase.
   - Si trae `error` (string) o `errorCode`: `AGENT_ERROR`.
   - Por cada parte de `content.parts`:
     - `functionCall {name, args}` se traduce a `toolCall`.
     - `functionResponse {name, response}` se traduce a `toolResult`.
     - `text` se traduce a `text`, ignorando las partes con `thought: true`.
-- **Deduplicación.** Con `streaming:true`, ADK emite trozos con `partial:true` y luego un evento agregado (sin `partial`) con el texto completo. Si en el turno ya hubo parciales, descarta el texto del agregado. Reinicia este control en cada evento no parcial.
-- **Cortes.** Si el stream se interrumpe: `AGENT_TIMEOUT` si venció el total; si el cliente canceló, termina sin error; si no, `AGENT_ERROR`.
-- **Autenticación.** Con `ADK_USE_ID_TOKEN=true`, agrega `authorization` usando `GoogleAuth().getIdTokenClient(baseUrl)`.
+- **Deduplicación.** Con `streaming:true`, ADK emite trozos `partial:true` y luego un evento agregado con el texto completo. Si en el turno ya hubo parciales, descarta el texto del agregado. Reinicia este control en cada evento no parcial.
+- **Cortes.** Si el stream se interrumpe: `AGENT_TIMEOUT` si venció el total; sin error si el cliente canceló; `AGENT_ERROR` en otro caso.
+- **Autenticación hacia el agente en Cloud Run** (`ADK_AUTH_MODE`):
+  - `none`.
+  - `bearer`: token fijo de `ADK_BEARER_TOKEN`, para pruebas.
+  - `metadata` (default en Cloud Run): pide el ID token al metadata server, `GET http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience={ADK_BASE_URL}` con header `Metadata-Flavor: Google`. Cachéalo 50 minutos.
 
-### Adapter Gemini directo (fallback)
+  Con `metadata` no necesitas `google-auth-library`.
 
-- Carga y valida `tools.json`: un arreglo de `{name, description, parameters (JSON Schema), method GET|POST, path}`.
-- Usa `@google/genai` con `httpOptions.baseUrl` igual a `AI_GATEWAY_BASE_URL`, `temperature 0` y una instrucción de sistema. La instrucción dice: responder solo con datos de las tools; si no hay datos, decir que el metamodelo actual no tiene esa información; en español, conciso, con cifras.
-- Bucle de function calling de máximo 5 rondas. Cada tool se invoca como HTTP contra `GRAPH_API_BASE_URL + path`, con timeout de 15 s. Los errores de una tool se devuelven al modelo como `{error}`, sin lanzar excepción.
-- Las sesiones se guardan en memoria (los últimos 20 contenidos). La respuesta final se emite como un solo `text`.
+### Configuración
 
-### Adapter HTTP de entrada
+Usa el mecanismo de configuración y validación existente. Variables nuevas:
 
-- `GET /healthz` devuelve `{ok: true}`.
-- `GET /brain/version` devuelve `KnowledgeVersion`.
-- Si `SERVE_DEMO_UI=true`, `GET /` sirve `public/index.html`.
-- `POST /brain/ask`
-  - Cuerpo validado con zod: `question` de 1 a 2000 caracteres tras trim, `sessionId` de 8 a 128, `userId` opcional (default `demo-user`). Si es inválido, responde 400 `{error: "BAD_REQUEST", details}`.
-  - Si es válido, responde un stream SSE con `event: <type>` y `data: <JSON>` por cada `BrainEvent`.
-  - Headers: `content-type: text/event-stream`, `cache-control: no-cache, no-transform`, `x-accel-buffering: no`, `x-correlation-id`, más los de CORS ya calculados. Hay que copiarlos antes de `reply.hijack()`.
-  - Heartbeat `: ping` cada 15 s.
-  - La desconexión del cliente se detecta con el evento `close` de la **respuesta** (`reply.raw`) cuando no terminó de escribirse. NO uses `close` del request: se dispara al terminar de leer el body. Al detectarla, cancela la llamada al agente.
-- `POST /brain/ingest`
-  - Multipart, máximo 10 archivos.
-  - Extensiones permitidas: `.md .mmd .dsl .drawio .xml`. Cualquier otra responde 415 `{error: "UNSUPPORTED_FILE", filename, allowed}`.
-  - Un archivo demasiado grande responde 413. Sin archivos responde 400.
-  - Si es válido, responde 202 `{jobId, statusUrl: "/brain/ingest/{jobId}"}`.
-- `GET /brain/ingest/:jobId` devuelve el estado.
-- **Manejo de errores:**
-  - Error del backend de ingesta: el status del upstream (502 si fue un 5xx o un fallo de red).
-  - Respuesta del upstream que no cumple el esquema zod: 502 `UPSTREAM_CONTRACT`.
-  - Cualquier otro error: 500 `INTERNAL`.
-- **Correlación:** toda respuesta lleva el header `x-correlation-id`.
-
-### Mock ADK (comportamiento exacto)
-
-**Endpoints**
-- `GET /list-apps` devuelve `[appName]`.
-- `POST /apps/:app/users/:user/sessions` y `POST /apps/:app/users/:user/sessions/:sid`.
-  - Devuelven `{id, appName, userId, state, events, lastUpdateTime}`.
-  - Un id existente devuelve 400 `{detail: "Session already exists: <id>"}`.
-  - Una app desconocida devuelve 404 `{detail}`.
-- `GET` y `DELETE` de la sesión.
-- `POST /run` devuelve el arreglo de eventos.
-- `POST /run_sse`
-  - Valida `appName`, `userId`, `sessionId` y `newMessage.parts`. Si falta alguno responde 422; app o sesión inexistente responde 404 `{detail: "Session not found"}`.
-- CORS abierto.
-
-**Formato de eventos**
-- Cada evento: `{id, invocationId ("e-" + uuid), author (appName), timestamp (segundos), content {role, parts}, actions {stateDelta, artifactDelta, requestedAuthConfigs}}`.
-- Opcionalmente `partial` y `turnComplete`.
-
-**Secuencia de una ejecución**
-1. Un evento con `functionCall {id, name, args}` (rol `model`).
-2. Una pausa.
-3. Un evento con `functionResponse {id, name, response}` (rol `user`), donde `response` es `{nodes, edges, summary}`.
-4. Si `streaming=true`: trozos de 6 palabras con `partial:true` y una pausa de `tokenDelayMs` entre trozos.
-5. Siempre al final: el evento agregado con el texto completo y `turnComplete:true`.
-
-**Memoria de sesión**
-- La pregunta se normaliza: minúsculas, sin signos `¿?¡!.,` y con espacios colapsados.
-- Si la pregunta normalizada ya se respondió en esa misma sesión, se responde el texto guardado SIN llamar tools.
-- Esto simula el historial del agente real y es lo que hace detectable que el BFF no rote la sesión.
-
-**Enrutamiento de intención** (reglas, sin LLM)
-1. Si la pregunta contiene `java <número>`: tool `find_apps_by_runtime` con `{runtime: "java", version}`.
-2. Si no, y contiene `depend`, `impacto`, `migr` o `afecta`: tool `get_dependencies` con `{componentId: <id de la aplicación mencionada>, depth: 2}`.
-3. Si no: tool `search_entities` con `{text: <sujeto>}`.
-
-El sujeto es la etiqueta de la aplicación mencionada más larga. Si no se menciona ninguna, es la palabra con mayúscula inicial más larga, excluyendo interrogativos (Qué, Cuál, Cuántas, Cómo, Dime, Hay); si no hay, la última palabra de más de 3 letras.
-
-**Plantillas de respuesta** (textos exactos; las pruebas los verifican)
-
-| Caso | Texto |
+| Variable | Default |
 |---|---|
-| Runtime con resultados | `Hay {N} aplicaciones registradas sobre Java {v}: {lista}.` |
-| Dependencias | `{App} depende directamente de {lista}[ e indirectamente de {lista}]. Migrarlo impacta {N} componentes.` |
-| Búsqueda de entidad | `{Label} ({Tipo}), corre sobre {runtimes}, depende de {deps}.` y, si hay ADRs que la deciden, ` Fuente: {ADRs}.` Omite las partes vacías |
-| Sin datos | `No tengo información sobre «{sujeto}» en el metamodelo actual. Puedes cargarla con el proceso de ingesta (ADR en MADR o vista en Mermaid).` |
+| `BRAIN_AGENT_MODE` | `adk` |
+| `BRAIN_AUTO_FALLBACK` | `false` |
+| `ADK_BASE_URL` | requerida si el modo es `adk` |
+| `ADK_APP_NAME` | `triage_agent` |
+| `ADK_PATH_PREFIX` | `""` (ADK Go usa `/api`) |
+| `ADK_AUTH_MODE` | `metadata` |
+| `ADK_BEARER_TOKEN` | — |
+| `ADK_CONNECT_TIMEOUT_MS` | 10000 |
+| `ADK_TOTAL_TIMEOUT_MS` | 90000 |
+| `BRAIN_INGEST_BASE_URL` | requerida |
+| `BRAIN_INGEST_MAX_FILE_BYTES` | 5242880 |
+| `BRAIN_METAMODEL_VERSION` | `1.0.0` (solo si no hay fuente en el caso de uso de metamodelo) |
 
-Las listas se forman como `A, B y C`.
+Si se implementa la Fase 5, se suman `AI_GATEWAY_BASE_URL`, `AI_GATEWAY_API_KEY`, `GEMINI_MODEL` y `GRAPH_API_BASE_URL`.
 
-**Inyección de fallas** (no existe en ADK real)
-- `POST /__mock/fault {mode}` y `GET /__mock/state`.
-- Modos:
-  - `none`
-  - `unavailable`: 503 en toda ruta que no sea `/__mock`.
-  - `slow`: espera `slowMs` antes de enviar headers en `/run_sse`.
-  - `midstream`: destruye el socket después de 3 eventos.
-  - `agent_error`: tras el primer evento emite `data: {"error":"Simulated model error: 429 RESOURCE_EXHAUSTED"}` y cierra.
-  - `session_lost`: borra todas las sesiones de inmediato y vuelve a `none`.
+Los booleanos se parsean solo desde `true`, `false`, `1` y `0`. Con zod NO uses `z.coerce.boolean()`, que convierte `"false"` en `true`.
 
-### Mock de grafo e ingesta
+### Mocks de prueba
 
-**Grafo en memoria compartido**
+**Ubicación:** fuera de `src/` y fuera de la cobertura, por ejemplo en `e2e/support/brain-mocks/`. Implementados con Express, que ya llega con `@nestjs/platform-express`, y arrancables en el mismo proceso desde los e2e con puerto 0.
+
+**Interfaz:**
+- `startBrainMocks(opts)` devuelve `{adkUrl, apiUrl, setFault(mode), close()}`.
+- Opciones: `tokenDelayMs` (default 35), `ingestDelayMs` (default 1500) y `slowMs` (default 15000).
+- Agrega un script npm `mocks:brain`, con el runner TypeScript que el repo ya tenga (ts-node o nest), que los levanta en los puertos 8000 (ADK) y 8001 (ingesta/grafo) para desarrollo local.
+
+**Grafo compartido en memoria**
 - Tipos de nodo: `Application`, `Runtime`, `ADR`, `Component`.
 - Tipos de relación: `RUNS_ON`, `DEPENDS_ON`, `DECIDES`.
 - Ids con slug: minúsculas, sin tildes, no alfanuméricos convertidos en `-`. Prefijos: `app:`, `rt:`, `adr:`.
@@ -275,152 +282,144 @@ Las listas se forman como `A, B y C`.
   - Canal Digital Personas → Pagos PSE
   - App Empresas → Pagos PSE
   - Motor de Riesgo → Core Tarjetas
-- PAUS NO existe en la semilla.
+- PAUS no existe.
 
-**Consultas**
-- `appsByRuntime`: aplicaciones con RUNS_ON hacia los runtimes que coinciden.
-- `dependencies`: BFS sobre DEPENDS_ON hasta la profundidad pedida.
-- `neighborhood`: un salto en ambas direcciones.
-- `findMentioned(texto, tipo?)`: nodos cuya etiqueta, como slug, está contenida en el texto o lo contiene, ordenados por longitud descendente.
+**Mock ADK**
+- **Endpoints:**
+  - `GET /list-apps` devuelve `[appName]`.
+  - `POST /apps/:app/users/:user/sessions[/:sid]` devuelve `{id, appName, userId, state, events, lastUpdateTime}`. Un id duplicado responde 400 `{detail: "Session already exists: <id>"}`.
+  - `GET` y `DELETE` de la sesión.
+  - `POST /run` devuelve el arreglo de eventos.
+  - `POST /run_sse` valida el cuerpo: si falta algo responde 422; si la app o la sesión no existen responde 404 `{detail: "Session not found"}`.
+- **Formato de eventos:** `{id, invocationId ("e-"+uuid), author (appName), timestamp (segundos), content {role, parts}, actions {stateDelta, artifactDelta, requestedAuthConfigs}}`, más `partial` y `turnComplete` opcionales.
+- **Secuencia de una ejecución:**
+  1. `functionCall {id, name, args}` con rol `model`.
+  2. Una pausa.
+  3. `functionResponse {id, name, response: {nodes, edges, summary}}` con rol `user`.
+  4. Si `streaming=true`: trozos de 6 palabras con `partial:true`.
+  5. Al final: el evento agregado con el texto completo y `turnComplete:true`.
+- **Memoria de sesión.** La pregunta se normaliza (minúsculas, sin `¿?¡!.,`, espacios colapsados). Si ya se respondió en esa sesión, se responde el texto guardado SIN tools.
+- **Enrutamiento de intención:**
+  1. Si contiene `java <n>`: tool `find_apps_by_runtime`.
+  2. Si no, y contiene `depend`, `impacto`, `migr` o `afecta`: tool `get_dependencies` con la aplicación mencionada y `depth` 2.
+  3. Si no: tool `search_entities` con el sujeto.
 
-**API HTTP**
-- `GET /graph`
-- `POST /queries/apps-by-runtime`
-- `POST /queries/dependencies`
-- `POST /queries/search`
+  El sujeto es la etiqueta de la aplicación mencionada más larga. Si no hay, es la palabra con mayúscula más larga, excluyendo interrogativos; si tampoco hay, la última palabra de más de 3 letras.
+- **Textos exactos de respuesta:**
+
+| Caso | Texto |
+|---|---|
+| Runtime con resultados | `Hay {N} aplicaciones registradas sobre Java {v}: {lista}.` |
+| Dependencias | `{App} depende directamente de {lista}[ e indirectamente de {lista}]. Migrarlo impacta {N} componentes.` |
+| Búsqueda de entidad | `{Label} ({Tipo}), corre sobre {runtimes}, depende de {deps}.` más ` Fuente: {ADRs}.` si existen; omite las partes vacías |
+| Sin datos | `No tengo información sobre «{sujeto}» en el metamodelo actual. Puedes cargarla con el proceso de ingesta (ADR en MADR o vista en Mermaid).` |
+
+  Las listas se forman como `A, B y C`.
+- **Fallas** (`POST /__mock/fault {mode}`):
+  - `none`
+  - `unavailable`: 503 en todo excepto `/__mock`.
+  - `slow`: espera `slowMs` antes de los headers de `/run_sse`.
+  - `midstream`: destruye el socket tras 3 eventos.
+  - `agent_error`: tras el primer evento emite `data: {"error":"Simulated model error: 429 RESOURCE_EXHAUSTED"}` y cierra.
+  - `session_lost`: borra las sesiones y vuelve a `none`.
+
+**Mock de ingesta y grafo**
 - `POST /ingest` (multipart) devuelve `{jobId}`.
-- `GET /ingest/:id`: pasa a `running` en `ingestDelayMs/3` y a `completed` en `ingestDelayMs` con `{snapshot, diff, warnings}`. El snapshot se incrementa solo si hubo cambios. Un job inexistente responde 404.
+- `GET /ingest/:id`: el job pasa a `running` en `ingestDelayMs/3` y a `completed` en `ingestDelayMs`, con `{status, jobId, snapshot, diff, warnings}`. El snapshot se incrementa solo si hubo cambios. Un job inexistente responde 404.
+- Consultas: `POST /queries/apps-by-runtime`, `/queries/dependencies` y `/queries/search`; `GET /graph`.
+- **Parser:**
+  - `.md` (MADR): frontmatter plano con `id`, `title`, `status`, `application`, `runtime` y `depends_on: [A, B]`. Crea el ADR, la aplicación, `DECIDES` (ADR → app), `RUNS_ON` y `DEPENDS_ON`.
+  - `.mmd`: cada línea `A[Etiqueta] --> B[Etiqueta]` crea aplicaciones y `DEPENDS_ON`.
+  - Otras extensiones: se aceptan con un warning.
 
-**Parser de ingesta**
-- **`.md` (MADR):** frontmatter YAML plano con `id`, `title`, `status`, `application`, `runtime` y `depends_on: [A, B]`.
-  - Crea: el nodo ADR, la aplicación, `DECIDES` (ADR → app), `RUNS_ON` y `DEPENDS_ON`.
-  - Si falta `id` o `application`, emite un warning y no crea nada.
-- **`.mmd` (Mermaid):** cada línea `A[Etiqueta] --> B[Etiqueta]` crea aplicaciones y `DEPENDS_ON`.
-- **Otras extensiones:** se aceptan con un warning.
+**Muestras** en `e2e/support/brain-mocks/samples/`:
+- `ADR-101-paus.md`: aplicación PAUS, runtime Java 17, depende de [Core Tarjetas, Pagos PSE], estado `accepted`.
+- `paus-contexto.mmd`: `flowchart LR` con PAUS → Autenticador Keycloak y Canal Digital Personas → PAUS.
 
-**Muestras**
-- `samples/ADR-101-paus.md`: ADR-101, aplicación PAUS, runtime Java 17, `depends_on` [Core Tarjetas, Pagos PSE], estado `accepted`, con secciones Contexto/Decisión/Consecuencias.
-- `samples/paus-contexto.mmd`:
-  - `flowchart LR`
-  - PAUS → Autenticador Keycloak
-  - Canal Digital Personas → PAUS
+### Pruebas
 
-### Front `public/index.html`
+**Unitarias (Jest, `*.spec.ts` junto al código)**
+- `AskBrain`: todas las reglas. Usa dobles de los puertos.
+- Adaptador ADK: contra un servidor HTTP local que emite SSE, cubriendo parciales y agregado, `{error}`, 404 y timeouts de conexión y total.
+- Parser SSE: `\r\n`, eventos multi-línea y cola sin `\n\n`.
+- Adaptador de ingesta.
+- Stores en memoria.
+- Controller: validación y mapeo de errores.
 
-**Restricciones**
-- Un solo archivo, HTML + CSS + JS vanilla, sin dependencias externas.
-- Tema claro y oscuro con `prefers-color-scheme`.
-- Responsive. Sin emojis.
-
-**Encabezado**
-- Estado del BFF (desde `/healthz`).
-- `metamodelo X · snapshot N` (desde `/brain/version`).
-- Sesión actual (8 caracteres).
-- Botón "Nueva sesión".
-
-**Panel de consulta**
-- Chat con burbujas.
-- Chips con preguntas sugeridas:
-  - ¿Cuántas aplicaciones usan Java 17?
-  - ¿Qué runtime usa PAUS?
-  - ¿Qué impacto tiene migrar Canal Digital Personas?
-  - ¿De qué depende Core Tarjetas?
-- Input, botón Enviar y botón Detener (aborta el fetch).
-- El POST a `/brain/ask` se lee con `fetch` + `ReadableStream`; EventSource no admite POST.
-- Debajo de cada respuesta, etiquetas con:
-  - agente
-  - correlación
-  - tools usadas
-  - cobertura según `source`: "respaldada por el grafo", "desde memoria de sesión (sin consultar grafo)" o "sin cobertura en el metamodelo"
-  - versión y snapshot
-  - tiempo al primer token y total
-- Los errores se marcan con borde rojo y el código.
-
-**Panel lateral**
-1. **Evidencia:** SVG con el subgrafo de la última respuesta, en layout circular, coloreado por tipo y con etiquetas en las relaciones. Sin datos, muestra un texto.
-2. **Ingesta:** input de archivos múltiple y botón "Cargar". Hace polling cada 500 ms (máximo 60 s) y muestra `job · estado · +N nodos, +M relaciones · snapshot S`; al terminar, refresca la versión.
-3. **Fallas simuladas:** URL del mock (default `http://localhost:8000`) y un selector con los 6 modos que llama `/__mock/fault`.
-4. **Log:** eventos SSE crudos, máximo 400 líneas.
-
-### Pruebas (`node:test`)
-
-**`test/helpers.ts`**
-- `askBff(base, question, sessionId)`: devuelve los eventos parseados.
-- `collectSse(body)`
-- `textOf(events)`: concatena los `token`.
-- `ofType(events, type)`
-- `ingestAndWait(base, files[])`: hace el POST y el polling hasta `completed` o `failed`.
-
-**`test/e2e.test.ts`**
-- Arranca `startMocks({tokenDelayMs: 1, ingestDelayMs: 150, slowMs: 3000})`.
-- Configura `process.env`: `ADK_USE_ID_TOKEN=false`, `ADK_CONNECT_TIMEOUT_MS=1000`, `AGENT_AUTO_FALLBACK=false`, `LOG_LEVEL=silent` y las URLs de los mocks.
-- Arranca el BFF con `createApp(loadConfig())` en un puerto aleatorio.
-- Casos mínimos (17 pruebas en total contando las de contrato):
+**E2E (supertest, en la carpeta e2e del repo)**
+- Levanta la app Nest con `BrainModule` y los mocks en puerto 0.
+- Autentica con el mock-login o el proveedor de identidad mock del repo.
+- Escenarios mínimos:
   1. **Caso A**, "¿Cuántas aplicaciones usan Java 17?":
-     - El texto contiene `Hay 3 aplicaciones registradas sobre Java 17` exactamente una vez (sin duplicación por el evento agregado).
+     - El texto concatenado contiene `Hay 3 aplicaciones registradas sobre Java 17` exactamente una vez.
      - Tools = [`find_apps_by_runtime`]; la evidencia incluye `app:core-tarjetas`.
      - `coverage` = `{metamodelVersion: "1.0.0", snapshot: 0, answered: true, source: "graph"}`.
      - El primer evento es `meta` y el último `done`.
-  2. **Caso B**, con la misma `sessionId` en toda la prueba:
+  2. **Caso B**, con el mismo `conversationId`:
      - "¿Qué runtime usa PAUS?" responde `No tengo información sobre «PAUS»` con `answered:false`.
      - Se ingestan las dos muestras: `completed` con `nodesAdded >= 3`.
      - La misma pregunta ahora contiene `PAUS (Application), corre sobre Java 17` y `Fuente: ADR-101`, con `answered:true` y `snapshot:1`.
-  3. **Pregunta repetida en la misma sesión:** sin tools y `source: "memory"`.
-  4. **`session_lost`** entre dos preguntas de la misma sesión: sin `error` y la respuesta menciona Pagos PSE (pregunta sobre Java 11).
-  5. **`unavailable`:** `error` `AGENT_UNAVAILABLE` y último evento `done`.
-  6. **`slow`:** `AGENT_TIMEOUT`.
-  7. **`midstream`:** al menos un `tool`, luego `error` `AGENT_ERROR` y `done`.
-  8. **`agent_error`:** `AGENT_ERROR` con mensaje que contiene 429.
-  9. **Validaciones HTTP:**
-     - 400 sin pregunta.
-     - 415 con un `.pdf`.
-     - `x-correlation-id` propagado.
-     - `/` sirve HTML que contiene "Enterprise Brain".
+  3. **Pregunta repetida en la misma conversación:** sin tools y `source:"memory"`.
+  4. **`session_lost`:** sin error, y la siguiente pregunta (Java 11) menciona Pagos PSE.
+  5. **`unavailable`:** `AGENT_UNAVAILABLE` y último evento `done`.
+  6. **`slow`** (con `ADK_CONNECT_TIMEOUT_MS=1000` y `slowMs=3000`): `AGENT_TIMEOUT`.
+  7. **`midstream`:** al menos un `tool`, luego `AGENT_ERROR` y `done`.
+  8. **`agent_error`:** `AGENT_ERROR`. El mensaje al cliente es genérico; el detalle 429 va solo en el log.
+  9. **Seguridad:** sin sesión responde 401. Ingesta con un rol sin permiso responde 403. Un usuario B no reutiliza la sesión de agente del usuario A aunque use el mismo `conversationId`.
+  10. **Validaciones:** 400 sin pregunta, 415 con `.pdf` y correlation-id propagado.
+- Antes de cada escenario de fallas se resetea a `none`.
 
-  Antes de cada caso de resiliencia se resetea la falla a `none`.
-
-**`test/contract-adk.test.ts`**
-- Usa `ADK_BASE_URL` si existe (más `ADK_PATH_PREFIX`, `ADK_APP_NAME` y un `ADK_BEARER_TOKEN` opcional); si no, arranca el mock.
+**Contrato ADK** (por ejemplo `e2e/brain-adk.contract.e2e-spec.ts`)
+- Usa `ADK_BASE_URL` (más `ADK_PATH_PREFIX`, `ADK_APP_NAME` y `ADK_BEARER_TOKEN`) si existe; si no, el mock.
 - Verifica:
   1. `/list-apps` incluye la app.
   2. `run_sse` con `streaming:true` responde 200 con eventos que traen `id`, `author` e `invocationId`, sin `error` ni `errorCode`.
-  3. Los parciales de un turno, concatenados, son iguales al texto del evento agregado.
-  4. Cada `functionResponse` trae `{nodes, edges}`, directo o en `result`. Si la pregunta (`CONTRACT_QUESTION`) no dispara tools, la prueba se marca skip.
+  3. Los parciales concatenados de un turno son iguales al texto agregado.
+  4. Cada `functionResponse` trae `{nodes, edges}`, directo o en `result`. Si la pregunta `CONTRACT_QUESTION` no dispara tools, la prueba se marca skip.
   5. Una sesión inexistente devuelve 404.
-- Esta prueba es la que luego se ejecuta contra el agente ADK real.
-
-### Restricciones generales
-
-- DEBE: manejar errores en todo `fetch` y en todo parseo; mantener el estado del BFF solo en memoria (la PoC se despliega con una instancia); escribir comentarios solo donde expliquen una decisión no obvia (por ejemplo, el timeout de conexión o la deduplicación de parciales).
-- NO DEBE: agregar autenticación de usuario final, bases de datos, Redis, frameworks de front ni librerías no listadas; cambiar nombres de endpoints, eventos, campos, exports o textos de plantilla especificados.
-- Si una prueba falla, corrige la implementación, no la prueba. Solo puedes ajustar una prueba si contradice esta especificación, y debes reportarlo.
+- Agrega un script npm para correrla de forma aislada.
 
 ### Criterios de aceptación
 
-- [ ] `npm install`, `npm run typecheck` y `npm run build` sin errores.
-- [ ] `npm test`: 17 pruebas, 0 fallos, 0 skips contra el mock.
-- [ ] `npm run demo` levanta 8000, 8001 y 8080. En `http://localhost:8080` el guion (Java 17 → PAUS sin datos → cargar las 2 muestras → PAUS con datos) muestra `snapshot 1`, la evidencia en el SVG y la cobertura "respaldada por el grafo".
-- [ ] Todos los nombres de archivos, exports, variables, endpoints, eventos y textos coinciden con esta especificación.
+- [ ] La Fase 0 se entregó y se detuvo esperando confirmación.
+- [ ] `lint`, `build`, `test:cov` (umbral del repo cumplido) y los e2e pasan. Los hooks de Husky pasan sin `--no-verify`.
+- [ ] El dominio no importa Nest ni infraestructura. Las convenciones de capas, nombres, DI, logger y Swagger son idénticas a las del caso de uso de metamodelo.
+- [ ] Swagger documenta las 4 rutas: `text/event-stream` con el esquema de cada `BrainEvent`, multipart y códigos de error. El e2e de contrato OpenAPI pasa.
+- [ ] El stream SSE no se rompe por el filtro de respuestas, la compresión ni el exception filter.
+- [ ] Nombres de rutas, eventos, campos JSON y textos coinciden con esta especificación. En caso de duda sobre el nombre de un campo JSON, usa el nombre escrito aquí entre comillas invertidas; nunca lo traduzcas ni lo sustituyas por un sinónimo.
+- [ ] Hay un commit convencional por fase y ningún push.
 
 ## Contexto
 
-En Banco Davivienda se construye el "Enterprise Brain" de la Plataforma de Arquitectura: un metamodelo de arquitectura (aplicaciones, runtimes, dependencias, ADRs) persistido como grafo, consultable en lenguaje natural mediante un "Agente Triage" construido con Google ADK sobre Gemini. Otro equipo construye ese agente y no estará listo a tiempo. Este proyecto es la pieza intermedia: el BFF que conecta el front con el agente. Se construye contra un agente simulado fiel al contrato de ADK, para validar la integración sin esperar al otro equipo. Cuando el agente real exista, solo debe cambiar `ADK_BASE_URL` y la prueba de contrato confirmará si encajan.
+Banco Davivienda construye el "Enterprise Brain" de la Plataforma de Arquitectura: un metamodelo de arquitectura (aplicaciones, runtimes, dependencias, ADRs) persistido como grafo y consultable en lenguaje natural mediante un "Agente Triage" hecho con Google ADK sobre Gemini, desplegado en GCP.
 
-La demo para ejecutivos tiene dos casos:
+Este repositorio es el BFF existente de la plataforma: NestJS 11, Node 24, hexagonal, autenticación por cookie con guards de roles, Jest con umbral de cobertura alto, Swagger con e2e de contrato, librerías corporativas `@npm-davi/*` desde Artifactory, y despliegue en Cloud Run.
+
+La demo ejecutiva es el jueves y tiene dos casos:
 - **A:** una consulta sobre datos ya cargados.
-- **B:** una pregunta sin datos, en la que el sistema admite que no sabe; se ingesta un ADR y una vista, y la misma pregunta se responde con evidencia. Esto demuestra que el conocimiento crece.
+- **B:** una pregunta sin datos, en la que el sistema admite que no sabe; se ingesta un ADR y una vista, y la misma pregunta se responde con evidencia.
 
-Restricciones del entorno: el desarrollo ocurre en un workspace sin Python y sin port-forward, por eso todo es Node/TypeScript y las pruebas automatizadas son la verificación principal.
+El agente real lo construye otro equipo. Cuando exista, solo cambia `ADK_BASE_URL`, y la prueba de contrato dirá si encaja.
 
-Fuera de alcance: UI final (tipo "Jarvis"), autenticación de usuarios, persistencia real, despliegue, el agente real y el backend real de ingesta.
+El front es otro repositorio y consumirá el contrato SSE documentado aquí. El entorno de desarrollo es un workspace sin Python y sin port-forward, por eso la verificación se hace con pruebas automatizadas y curl.
+
+**Fuera de alcance:** cambios en el front, el agente real, el backend real de ingesta, persistencia distribuida (el estado del módulo vive en memoria y Cloud Run debe correr con una instancia para la PoC; documéntalo como deuda) y la migración de la plataforma al ecosistema definitivo.
 
 ## Formato
 
-- Trabaja directamente creando los archivos en disco y ejecutando comandos; no pegues el código en el chat.
-- Al terminar responde solo con:
-  1. Árbol de archivos creados.
-  2. Salida resumida de typecheck, build y `npm test` (tests, pass, fail, skipped).
-  3. Checklist de criterios de aceptación marcada.
-  4. Decisiones que tomaste donde la especificación era ambigua (máximo 5 viñetas).
+- Trabaja creando archivos y ejecutando comandos en el repo; no pegues el código en el chat.
+- **En la Fase 0** responde con estas secciones:
+  1. Convenciones encontradas, con `archivo:línea`.
+  2. Tabla de mapeo de piezas a archivos.
+  3. Dependencias nuevas, con justificación y disponibilidad en el registro.
+  4. Riesgos.
+  5. Preguntas para mí, como máximo 5.
+
+  Luego detente.
+- **Al cerrar cada fase** responde con:
+  1. Archivos creados y modificados.
+  2. Resultado de `lint`, `test:cov` (cobertura global y del módulo) y e2e.
+  3. El hash y mensaje del commit.
+  4. Decisiones tomadas ante ambigüedades, como máximo 5 viñetas.
 - Sin preámbulo, sin resumen final, sin emojis, en español.
-- Antes de responder, verifica tu salida contra los criterios de aceptación. Si alguno no se cumple, sigue trabajando hasta cumplirlo.
+- Antes de cerrar cada fase, verifica contra los criterios de aceptación que apliquen y sigue trabajando hasta cumplirlos.
