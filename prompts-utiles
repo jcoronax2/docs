@@ -1,52 +1,426 @@
 ## Persona
-Eres un desarrollador front-end senior especializado en visualización de datos para presentaciones ejecutivas: HTML, CSS y JavaScript sin dependencias, animación SVG, rendimiento y legibilidad en proyector. Eres literal: construyes exactamente lo especificado, no agregas funciones, y nunca declaras que algo funciona sin haberlo ejecutado o verificado.
+
+Eres un ingeniero de software senior especializado en backends Node.js/TypeScript para sistemas con agentes de IA en banca. Aplicas arquitectura hexagonal (puertos y adaptadores), diseño contract-first y pruebas automatizadas como especificación ejecutable. Conoces el API server de Google ADK (Agent Development Kit) y Server-Sent Events (SSE). Eres riguroso: implementas exactamente lo especificado, no agregas funcionalidades no pedidas, y cuando algo de esta especificación sea ambiguo eliges la opción más simple que cumpla los criterios de aceptación y la declaras al final.
 
 ## Tarea
-Dentro del repositorio `metamodelo/` ya existente (resultado del prompt 1; `node validar.js` pasa) crea la carpeta `demo/` con una demostración interactiva para presentar a un director: UN solo archivo `demo/metamodelo-demo.html` (CSS, JS y datos incrustados; sin internet, sin CDN, sin imágenes externas, sin frameworks) que se abre con doble clic.
 
-Pasos:
-0. Ejecuta `node validar.js --fecha 2026-10-21` para tener `salida/grafo.json` y `salida/consistencia.json`.
-1. `demo/motor.js`: función pura `impacto(grafo, mm, origen)` y `contexto(grafo, app)`, según <motor>. Escrita en JS clásico (sin `?.`, `??`, `||=`) y exportada como `window.Motor` en el navegador o `module.exports` en Node.
-2. `demo/probar-motor.js`: para CADA componente del grafo ejecuta `node validar.js --fecha 2026-10-21 --impacto ID`, lee de la tabla los componentes y su estado (caido o degradado) y comprueba con `node:assert` que `Motor.impacto` da exactamente el mismo conjunto y los mismos estados (sin contar el origen). Comprueba también `contexto(grafo,'APP-006')` según <esperado>.
-3. `demo/plantilla.html` con los marcadores `/*@@MOTOR@@*/` (contenido de motor.js) y `/*@@DATOS@@*/` (objeto JSON), y `demo/construir.js` que ejecuta validar.js, arma `DATOS` y escribe `metamodelo-demo.html`. Reemplaza los marcadores con una función (no con cadena) y escapa `</script`. `DATOS` = `{mm, grafo, consistencia, reglas}`: `mm` con workspaces, propagacion_impacto, tipos_componente (workspace, padres, origen, campos obligatorios) y tipos_referencia (frase, triples con salida/entrada); `grafo` = salida/grafo.json; `consistencia` = salida/consistencia.json; `reglas` = id y descripcion de reglas-consistencia.json.
-4. Verifica: `node probar-motor.js`; sintaxis de los scripts del HTML; y, si hay Chrome o Edge, capturas headless (`--force-prefers-reduced-motion --window-size=1920,1080 --virtual-time-budget=9000`) de cada acto con las URL de <diseno>. Revisa visualmente que no haya textos pisados ni elementos fuera de margen.
-5. `demo/README.md` breve: teclas, cómo regenerar, qué cifras reemplazar.
+Construir desde cero, en una carpeta nueva `brain-bff/`, un proyecto ejecutable con cuatro piezas:
 
-DEBE: respetar <diseno> y <esperado>; funcionar offline; respetar `prefers-reduced-motion`; dejar un valor final garantizado en los contadores animados (temporizador además de requestAnimationFrame; una bandera evita que un fotograma tardío lo pise). NO DEBE: usar librerías, fuentes o imágenes externas, ni inventar datos distintos de los del grafo.
+1. Un **BFF** (Backend for Frontend) que recibe preguntas del front y las enruta por SSE a un agente ADK. También hace de proxy de la ingesta de documentos.
+2. Un **mock del agente ADK**, fiel al contrato HTTP público del API server de ADK (Python).
+3. Un **mock del backend de ingesta y grafo**, que comparte datos con el mock del agente.
+4. Un **front de prueba** en un único archivo HTML, servido por el propio BFF.
+
+Al terminar, `npm test` debe pasar completo y `npm run demo` debe permitir ejecutar el guion de demo descrito en Contexto.
+
+### Pasos
+
+1. Crea `package.json`, `tsconfig.json`, `tsconfig.check.json` y `.gitignore` con el stack y los scripts indicados abajo. Instala dependencias.
+2. Implementa el núcleo: dominio, puertos y casos de uso.
+3. Implementa los adapters de salida: ADK, Gemini directo, ingesta HTTP y stores en memoria.
+4. Implementa el adapter de entrada HTTP y el composition root.
+5. Implementa los mocks y el script de demo.
+6. Implementa el front.
+7. Escribe las pruebas e2e y de contrato, ejecútalas y corrige hasta que pasen.
+8. Escribe `README.md`, `Dockerfile`, `tools.json` y los archivos de `samples/`.
+9. Verifica contra los criterios de aceptación y reporta.
+
+### Stack (obligatorio)
+
+- Node.js 20 o superior, TypeScript 5 en modo `strict` con `noUncheckedIndexedAccess`, ESM (`"type": "module"`, `module` y `moduleResolution` en `NodeNext`, imports relativos con extensión `.js`).
+- Dependencias: `fastify` 5, `@fastify/cors`, `@fastify/multipart`, `zod` 3, `google-auth-library` 9, `@google/genai` 1.
+- Dependencias de desarrollo: `typescript`, `tsx`, `@types/node`.
+- Pruebas con el runner nativo `node:test` y `node:assert/strict`, ejecutadas con `tsx`. NO uses Jest, Vitest ni Python.
+- `fetch` nativo de Node. NO uses axios ni librerías de SSE.
+- Scripts de `package.json`:
+  - `build`: `tsc -p tsconfig.json`
+  - `start`: `node dist/main.js`
+  - `dev`: `src/main.ts` con watch
+  - `demo`: `scripts/demo.ts`
+  - `mocks`: `mocks/start.ts`
+  - `typecheck`: `tsc -p tsconfig.check.json`
+  - `test`: ambos archivos de test con concurrencia 1
+  - `test:e2e`
+  - `test:contract`
+- `tsconfig.json` compila solo `src` a `dist`. `tsconfig.check.json` lo extiende con `noEmit` e incluye `src`, `mocks`, `test` y `scripts`.
+
+### Estructura de archivos y exports (obligatoria; las pruebas dependen de estos nombres)
+
+- `src/config.ts`: exporta `loadConfig(): Config` y el tipo `Config`. Valida `process.env` con zod y falla con un mensaje claro si la configuración es inválida.
+- `src/domain/model.ts`: tipos del dominio, el esquema zod `GraphPayload` y la clase `BrainError`.
+- `src/ports.ts`: interfaces `AgentClient`, `IngestClient`, `KnowledgeState` y `SessionStore`.
+- `src/app/askService.ts`: clase `AskService`.
+- `src/app/ingestService.ts`: clase `IngestService`.
+- `src/adapters/out/`: archivos `adkAgentClient.ts`, `geminiDirectClient.ts`, `httpIngestClient.ts`, `inMemory.ts` y `sse.ts`. Este último es un parser SSE reutilizable.
+- `src/adapters/in/http.ts`: función async `buildServer(cfg, deps, app)`.
+- `src/compose.ts`: exporta `createApp(cfg: Config): Promise<FastifyInstance>`. Es el único lugar que instancia adapters concretos. Usa `x-correlation-id` entrante como id de request; si no viene, genera un UUID.
+- `src/main.ts`: carga la config, llama `createApp`, escucha en `0.0.0.0:PORT` y apaga limpio con SIGTERM y SIGINT.
+- `mocks/graph-store.ts`, `mocks/ingest-parser.ts`, `mocks/adk-mock.ts`, `mocks/graph-api-mock.ts` y `mocks/start.ts`.
+  - `mocks/start.ts` exporta `startMocks(opts)` con opciones opcionales `adkPort`, `apiPort` (puerto 0 = aleatorio, es el default), `appName`, `tokenDelayMs` (default 35), `ingestDelayMs` (default 1500), `slowMs` (default 15000) y `host`.
+  - `startMocks` devuelve `{ adkUrl, apiUrl, store, setFault(mode), close() }`.
+  - Ejecutado como CLI, levanta el mock ADK en 8000 y el de ingesta en 8001.
+- `scripts/demo.ts`: en un solo proceso levanta los mocks (8000 y 8001) y el BFF (8080, o `PORT`), con `ADK_USE_ID_TOKEN=false` y `AGENT_AUTO_FALLBACK=false` por defecto.
+- `public/index.html`: el front.
+- `test/helpers.ts`, `test/e2e.test.ts` y `test/contract-adk.test.ts`.
+- `samples/ADR-101-paus.md` y `samples/paus-contexto.mmd`.
+- `tools.json`, `README.md`, `Dockerfile` (multi-stage, `node:22-slim`, usuario `node`, copia `public` y `tools.json`) y `.gitignore`.
+
+### Configuración (variables de entorno)
+
+| Variable | Default | Uso |
+|---|---|---|
+| `PORT` | 8080 | Puerto del BFF |
+| `LOG_LEVEL` | info | Nivel de log |
+| `AGENT_MODE` | adk | `adk` o `direct` |
+| `AGENT_AUTO_FALLBACK` | true | Activa el fallback a Gemini |
+| `ADK_BASE_URL` | — | URL del agente ADK |
+| `ADK_APP_NAME` | triage_agent | Nombre de la app ADK |
+| `ADK_PATH_PREFIX` | "" | ADK Go usa `/api` |
+| `ADK_USE_ID_TOKEN` | true | Firma con ID token de Google, audience = `ADK_BASE_URL` |
+| `ADK_CONNECT_TIMEOUT_MS` | 10000 | Timeout de conexión |
+| `ADK_TOTAL_TIMEOUT_MS` | 90000 | Timeout total |
+| `GEMINI_MODEL` | gemini-2.5-flash | Modelo del fallback |
+| `AI_GATEWAY_BASE_URL` | — | Base del AI Gateway |
+| `AI_GATEWAY_API_KEY` | — | Credencial del AI Gateway |
+| `GRAPH_API_BASE_URL` | — | API de consulta del grafo |
+| `TOOLS_FILE` | ./tools.json | Tools del fallback |
+| `INGEST_BASE_URL` | — (requerido) | Backend de ingesta |
+| `INGEST_MAX_FILE_BYTES` | 5 MB | Límite por archivo |
+| `METAMODEL_VERSION` | 1.0.0 | Versión del metamodelo |
+| `CORS_ORIGIN` | * | Orígenes permitidos |
+| `SERVE_DEMO_UI` | true | Sirve el front en `/` |
+
+Reglas de validación:
+- Los booleanos se parsean SOLO desde `"true"`, `"false"`, `"1"` y `"0"`. NO uses `z.coerce.boolean()`, que convierte `"false"` en `true`.
+- Con `AGENT_MODE=adk`, `ADK_BASE_URL` es obligatorio.
+- Si `AGENT_MODE=direct` o `AGENT_AUTO_FALLBACK=true`, son obligatorios `AI_GATEWAY_BASE_URL` y `GRAPH_API_BASE_URL`.
+
+### Dominio y puertos
+
+- `GraphNode {id, label, type, props?}`, `GraphEdge {source, target, type}`, `GraphPayload {nodes[], edges[]}`.
+- `KnowledgeVersion {metamodelVersion, snapshot}`. El metamodelo es el esquema y cambia por decisión de diseño; el snapshot es el contenido y aumenta con cada ingesta.
+- Eventos internos del agente (`AgentEvent`):
+  - `text {text}`
+  - `toolCall {name, args}`
+  - `toolResult {name, result}`
+- Eventos públicos SSE (`BrainEvent`), un contrato que no se puede romper:
+  - `meta {correlationId, agentMode}`
+  - `token {text}`
+  - `tool {name, args}`
+  - `evidence {nodes, edges}`
+  - `coverage {metamodelVersion, snapshot, answered, source}`, donde `source` es `"graph"`, `"memory"` o `"none"`
+  - `error {code, message}`
+  - `done`
+- Códigos de error: `AGENT_UNAVAILABLE`, `AGENT_TIMEOUT`, `AGENT_ERROR`, `SESSION_NOT_FOUND`, `INTERNAL`.
+- `BrainError` lleva `code` y `beforeFirstEvent` (booleano: true si falló antes de emitir cualquier evento), y acepta `cause`.
+- Puertos:
+  - `AgentClient {mode: "adk" | "direct"; createSession(userId, signal); ask({userId, agentSessionId, question, correlationId, signal}): AsyncIterable<AgentEvent>}`
+  - `IngestClient {submit(files, correlationId) -> {jobId}; status(jobId, correlationId) -> IngestStatus}`
+  - `IngestStatus` es `pending|running {jobId}`, `completed {jobId, snapshot, diff{nodesAdded, edgesAdded}}` o `failed {jobId, error}`.
+  - `KnowledgeState {current(); advanceTo(snapshot)}`. Es monótono: ignora snapshots menores.
+  - `SessionStore {get, set, delete}`. Mapea el `sessionId` del front a `{agentSessionId, snapshot, mode}`. La versión en memoria tiene un límite de 1000 entradas y desaloja la más antigua.
+
+### Caso de uso AskService (reglas exactas)
+
+1. **Resolución de sesión.** Se reutiliza la sesión guardada solo si su `snapshot` es igual al actual Y su `mode` es igual al del cliente en uso. En cualquier otro caso se crea una sesión nueva en el agente y se guarda. Así, después de una ingesta, la siguiente pregunta no se responde desde la memoria vieja del agente.
+2. **Primer evento.** Emite `meta` una vez, con el modo del agente que efectivamente responde.
+3. **Traducción de eventos.**
+   - `text` se emite como `token`.
+   - `toolCall` se emite como `tool` y se cuenta.
+   - De `toolResult` se extrae el grafo. Acepta `{nodes, edges}` directo o envuelto en `{result: {...}}`. Exige que la clave `nodes` o `edges` exista; si no, ignora el resultado, porque con `default([])` cualquier objeto validaría como grafo vacío. Si trae nodos o relaciones, emite `evidence` y acumula, deduplicando nodos por id y relaciones por `source|type|target`.
+4. **Al terminar.** Emite `coverage` con `answered = (hay nodos acumulados)` y `source`:
+   - `graph` si hay nodos.
+   - `memory` si no se llamó ninguna tool.
+   - `none` si se llamaron tools pero no devolvieron datos.
+
+   Luego emite `done`.
+5. **Errores.** Como máximo 3 intentos.
+   - Si el error ocurre antes de emitir nada y es `SESSION_NOT_FOUND`: borra la sesión del store y reintenta UNA vez con el mismo cliente.
+   - Si ocurre antes de emitir nada, es otro código y hay fallback configurado: cambia al cliente fallback UNA vez y vuelve a emitir `meta`.
+   - En cualquier otro caso emite `error` y luego `done`. Nunca mezcles dos agentes en una misma respuesta.
+6. Registra en el log cada tool invocada, la rotación de sesión y los fallos, siempre con `correlationId`.
+
+### IngestService
+
+Proxy delgado. `status()` reenvía al cliente; si el estado es `completed`, llama `knowledge.advanceTo(snapshot)`. La respuesta agrega `metamodelVersion`.
+
+### Adapter ADK (contrato del API server de ADK)
+
+- **Crear sesión:** `POST {base}{prefix}/apps/{app}/users/{user}/sessions` con cuerpo `{}`. La respuesta trae `id`. Un fallo de red o HTTP no-2xx es `AGENT_UNAVAILABLE` con `beforeFirstEvent=true`.
+- **Ejecutar:** `POST {base}{prefix}/run_sse`.
+  - Cuerpo: `{appName, userId, sessionId, newMessage: {role: "user", parts: [{text}]}, streaming: true}`.
+  - Headers: `x-correlation-id` y `accept: text/event-stream`.
+- **Timeouts.** El timeout de conexión aplica SOLO hasta recibir los headers; después se cancela y rige el timeout total. Si el de conexión cubre todo el stream, corta respuestas largas.
+- **Errores HTTP:**
+  - Fallo antes de los headers: `AGENT_TIMEOUT` si venció un timeout, si no `AGENT_UNAVAILABLE`.
+  - HTTP 404: `SESSION_NOT_FOUND`.
+  - Otro no-2xx: `AGENT_UNAVAILABLE`.
+
+  Todos con `beforeFirstEvent=true`.
+- **Stream.** Cada `data:` es un Event JSON en camelCase.
+  - Si trae `error` (string) o `errorCode`: `AGENT_ERROR`.
+  - Por cada parte de `content.parts`:
+    - `functionCall {name, args}` se traduce a `toolCall`.
+    - `functionResponse {name, response}` se traduce a `toolResult`.
+    - `text` se traduce a `text`, ignorando las partes con `thought: true`.
+- **Deduplicación.** Con `streaming:true`, ADK emite trozos con `partial:true` y luego un evento agregado (sin `partial`) con el texto completo. Si en el turno ya hubo parciales, descarta el texto del agregado. Reinicia este control en cada evento no parcial.
+- **Cortes.** Si el stream se interrumpe: `AGENT_TIMEOUT` si venció el total; si el cliente canceló, termina sin error; si no, `AGENT_ERROR`.
+- **Autenticación.** Con `ADK_USE_ID_TOKEN=true`, agrega `authorization` usando `GoogleAuth().getIdTokenClient(baseUrl)`.
+
+### Adapter Gemini directo (fallback)
+
+- Carga y valida `tools.json`: un arreglo de `{name, description, parameters (JSON Schema), method GET|POST, path}`.
+- Usa `@google/genai` con `httpOptions.baseUrl` igual a `AI_GATEWAY_BASE_URL`, `temperature 0` y una instrucción de sistema. La instrucción dice: responder solo con datos de las tools; si no hay datos, decir que el metamodelo actual no tiene esa información; en español, conciso, con cifras.
+- Bucle de function calling de máximo 5 rondas. Cada tool se invoca como HTTP contra `GRAPH_API_BASE_URL + path`, con timeout de 15 s. Los errores de una tool se devuelven al modelo como `{error}`, sin lanzar excepción.
+- Las sesiones se guardan en memoria (los últimos 20 contenidos). La respuesta final se emite como un solo `text`.
+
+### Adapter HTTP de entrada
+
+- `GET /healthz` devuelve `{ok: true}`.
+- `GET /brain/version` devuelve `KnowledgeVersion`.
+- Si `SERVE_DEMO_UI=true`, `GET /` sirve `public/index.html`.
+- `POST /brain/ask`
+  - Cuerpo validado con zod: `question` de 1 a 2000 caracteres tras trim, `sessionId` de 8 a 128, `userId` opcional (default `demo-user`). Si es inválido, responde 400 `{error: "BAD_REQUEST", details}`.
+  - Si es válido, responde un stream SSE con `event: <type>` y `data: <JSON>` por cada `BrainEvent`.
+  - Headers: `content-type: text/event-stream`, `cache-control: no-cache, no-transform`, `x-accel-buffering: no`, `x-correlation-id`, más los de CORS ya calculados. Hay que copiarlos antes de `reply.hijack()`.
+  - Heartbeat `: ping` cada 15 s.
+  - La desconexión del cliente se detecta con el evento `close` de la **respuesta** (`reply.raw`) cuando no terminó de escribirse. NO uses `close` del request: se dispara al terminar de leer el body. Al detectarla, cancela la llamada al agente.
+- `POST /brain/ingest`
+  - Multipart, máximo 10 archivos.
+  - Extensiones permitidas: `.md .mmd .dsl .drawio .xml`. Cualquier otra responde 415 `{error: "UNSUPPORTED_FILE", filename, allowed}`.
+  - Un archivo demasiado grande responde 413. Sin archivos responde 400.
+  - Si es válido, responde 202 `{jobId, statusUrl: "/brain/ingest/{jobId}"}`.
+- `GET /brain/ingest/:jobId` devuelve el estado.
+- **Manejo de errores:**
+  - Error del backend de ingesta: el status del upstream (502 si fue un 5xx o un fallo de red).
+  - Respuesta del upstream que no cumple el esquema zod: 502 `UPSTREAM_CONTRACT`.
+  - Cualquier otro error: 500 `INTERNAL`.
+- **Correlación:** toda respuesta lleva el header `x-correlation-id`.
+
+### Mock ADK (comportamiento exacto)
+
+**Endpoints**
+- `GET /list-apps` devuelve `[appName]`.
+- `POST /apps/:app/users/:user/sessions` y `POST /apps/:app/users/:user/sessions/:sid`.
+  - Devuelven `{id, appName, userId, state, events, lastUpdateTime}`.
+  - Un id existente devuelve 400 `{detail: "Session already exists: <id>"}`.
+  - Una app desconocida devuelve 404 `{detail}`.
+- `GET` y `DELETE` de la sesión.
+- `POST /run` devuelve el arreglo de eventos.
+- `POST /run_sse`
+  - Valida `appName`, `userId`, `sessionId` y `newMessage.parts`. Si falta alguno responde 422; app o sesión inexistente responde 404 `{detail: "Session not found"}`.
+- CORS abierto.
+
+**Formato de eventos**
+- Cada evento: `{id, invocationId ("e-" + uuid), author (appName), timestamp (segundos), content {role, parts}, actions {stateDelta, artifactDelta, requestedAuthConfigs}}`.
+- Opcionalmente `partial` y `turnComplete`.
+
+**Secuencia de una ejecución**
+1. Un evento con `functionCall {id, name, args}` (rol `model`).
+2. Una pausa.
+3. Un evento con `functionResponse {id, name, response}` (rol `user`), donde `response` es `{nodes, edges, summary}`.
+4. Si `streaming=true`: trozos de 6 palabras con `partial:true` y una pausa de `tokenDelayMs` entre trozos.
+5. Siempre al final: el evento agregado con el texto completo y `turnComplete:true`.
+
+**Memoria de sesión**
+- La pregunta se normaliza: minúsculas, sin signos `¿?¡!.,` y con espacios colapsados.
+- Si la pregunta normalizada ya se respondió en esa misma sesión, se responde el texto guardado SIN llamar tools.
+- Esto simula el historial del agente real y es lo que hace detectable que el BFF no rote la sesión.
+
+**Enrutamiento de intención** (reglas, sin LLM)
+1. Si la pregunta contiene `java <número>`: tool `find_apps_by_runtime` con `{runtime: "java", version}`.
+2. Si no, y contiene `depend`, `impacto`, `migr` o `afecta`: tool `get_dependencies` con `{componentId: <id de la aplicación mencionada>, depth: 2}`.
+3. Si no: tool `search_entities` con `{text: <sujeto>}`.
+
+El sujeto es la etiqueta de la aplicación mencionada más larga. Si no se menciona ninguna, es la palabra con mayúscula inicial más larga, excluyendo interrogativos (Qué, Cuál, Cuántas, Cómo, Dime, Hay); si no hay, la última palabra de más de 3 letras.
+
+**Plantillas de respuesta** (textos exactos; las pruebas los verifican)
+
+| Caso | Texto |
+|---|---|
+| Runtime con resultados | `Hay {N} aplicaciones registradas sobre Java {v}: {lista}.` |
+| Dependencias | `{App} depende directamente de {lista}[ e indirectamente de {lista}]. Migrarlo impacta {N} componentes.` |
+| Búsqueda de entidad | `{Label} ({Tipo}), corre sobre {runtimes}, depende de {deps}.` y, si hay ADRs que la deciden, ` Fuente: {ADRs}.` Omite las partes vacías |
+| Sin datos | `No tengo información sobre «{sujeto}» en el metamodelo actual. Puedes cargarla con el proceso de ingesta (ADR en MADR o vista en Mermaid).` |
+
+Las listas se forman como `A, B y C`.
+
+**Inyección de fallas** (no existe en ADK real)
+- `POST /__mock/fault {mode}` y `GET /__mock/state`.
+- Modos:
+  - `none`
+  - `unavailable`: 503 en toda ruta que no sea `/__mock`.
+  - `slow`: espera `slowMs` antes de enviar headers en `/run_sse`.
+  - `midstream`: destruye el socket después de 3 eventos.
+  - `agent_error`: tras el primer evento emite `data: {"error":"Simulated model error: 429 RESOURCE_EXHAUSTED"}` y cierra.
+  - `session_lost`: borra todas las sesiones de inmediato y vuelve a `none`.
+
+### Mock de grafo e ingesta
+
+**Grafo en memoria compartido**
+- Tipos de nodo: `Application`, `Runtime`, `ADR`, `Component`.
+- Tipos de relación: `RUNS_ON`, `DEPENDS_ON`, `DECIDES`.
+- Ids con slug: minúsculas, sin tildes, no alfanuméricos convertidos en `-`. Prefijos: `app:`, `rt:`, `adr:`.
+
+**Semilla, snapshot 0**
+- Runtimes: Java 17, Java 11 y Node 20.
+- Aplicaciones RUNS_ON:
+  - Canal Digital Personas → Java 17
+  - Core Tarjetas → Java 17
+  - Motor de Riesgo → Java 17
+  - Pagos PSE → Java 11
+  - App Empresas → Node 20
+- DEPENDS_ON:
+  - Canal Digital Personas → Core Tarjetas
+  - Canal Digital Personas → Pagos PSE
+  - App Empresas → Pagos PSE
+  - Motor de Riesgo → Core Tarjetas
+- PAUS NO existe en la semilla.
+
+**Consultas**
+- `appsByRuntime`: aplicaciones con RUNS_ON hacia los runtimes que coinciden.
+- `dependencies`: BFS sobre DEPENDS_ON hasta la profundidad pedida.
+- `neighborhood`: un salto en ambas direcciones.
+- `findMentioned(texto, tipo?)`: nodos cuya etiqueta, como slug, está contenida en el texto o lo contiene, ordenados por longitud descendente.
+
+**API HTTP**
+- `GET /graph`
+- `POST /queries/apps-by-runtime`
+- `POST /queries/dependencies`
+- `POST /queries/search`
+- `POST /ingest` (multipart) devuelve `{jobId}`.
+- `GET /ingest/:id`: pasa a `running` en `ingestDelayMs/3` y a `completed` en `ingestDelayMs` con `{snapshot, diff, warnings}`. El snapshot se incrementa solo si hubo cambios. Un job inexistente responde 404.
+
+**Parser de ingesta**
+- **`.md` (MADR):** frontmatter YAML plano con `id`, `title`, `status`, `application`, `runtime` y `depends_on: [A, B]`.
+  - Crea: el nodo ADR, la aplicación, `DECIDES` (ADR → app), `RUNS_ON` y `DEPENDS_ON`.
+  - Si falta `id` o `application`, emite un warning y no crea nada.
+- **`.mmd` (Mermaid):** cada línea `A[Etiqueta] --> B[Etiqueta]` crea aplicaciones y `DEPENDS_ON`.
+- **Otras extensiones:** se aceptan con un warning.
+
+**Muestras**
+- `samples/ADR-101-paus.md`: ADR-101, aplicación PAUS, runtime Java 17, `depends_on` [Core Tarjetas, Pagos PSE], estado `accepted`, con secciones Contexto/Decisión/Consecuencias.
+- `samples/paus-contexto.mmd`:
+  - `flowchart LR`
+  - PAUS → Autenticador Keycloak
+  - Canal Digital Personas → PAUS
+
+### Front `public/index.html`
+
+**Restricciones**
+- Un solo archivo, HTML + CSS + JS vanilla, sin dependencias externas.
+- Tema claro y oscuro con `prefers-color-scheme`.
+- Responsive. Sin emojis.
+
+**Encabezado**
+- Estado del BFF (desde `/healthz`).
+- `metamodelo X · snapshot N` (desde `/brain/version`).
+- Sesión actual (8 caracteres).
+- Botón "Nueva sesión".
+
+**Panel de consulta**
+- Chat con burbujas.
+- Chips con preguntas sugeridas:
+  - ¿Cuántas aplicaciones usan Java 17?
+  - ¿Qué runtime usa PAUS?
+  - ¿Qué impacto tiene migrar Canal Digital Personas?
+  - ¿De qué depende Core Tarjetas?
+- Input, botón Enviar y botón Detener (aborta el fetch).
+- El POST a `/brain/ask` se lee con `fetch` + `ReadableStream`; EventSource no admite POST.
+- Debajo de cada respuesta, etiquetas con:
+  - agente
+  - correlación
+  - tools usadas
+  - cobertura según `source`: "respaldada por el grafo", "desde memoria de sesión (sin consultar grafo)" o "sin cobertura en el metamodelo"
+  - versión y snapshot
+  - tiempo al primer token y total
+- Los errores se marcan con borde rojo y el código.
+
+**Panel lateral**
+1. **Evidencia:** SVG con el subgrafo de la última respuesta, en layout circular, coloreado por tipo y con etiquetas en las relaciones. Sin datos, muestra un texto.
+2. **Ingesta:** input de archivos múltiple y botón "Cargar". Hace polling cada 500 ms (máximo 60 s) y muestra `job · estado · +N nodos, +M relaciones · snapshot S`; al terminar, refresca la versión.
+3. **Fallas simuladas:** URL del mock (default `http://localhost:8000`) y un selector con los 6 modos que llama `/__mock/fault`.
+4. **Log:** eventos SSE crudos, máximo 400 líneas.
+
+### Pruebas (`node:test`)
+
+**`test/helpers.ts`**
+- `askBff(base, question, sessionId)`: devuelve los eventos parseados.
+- `collectSse(body)`
+- `textOf(events)`: concatena los `token`.
+- `ofType(events, type)`
+- `ingestAndWait(base, files[])`: hace el POST y el polling hasta `completed` o `failed`.
+
+**`test/e2e.test.ts`**
+- Arranca `startMocks({tokenDelayMs: 1, ingestDelayMs: 150, slowMs: 3000})`.
+- Configura `process.env`: `ADK_USE_ID_TOKEN=false`, `ADK_CONNECT_TIMEOUT_MS=1000`, `AGENT_AUTO_FALLBACK=false`, `LOG_LEVEL=silent` y las URLs de los mocks.
+- Arranca el BFF con `createApp(loadConfig())` en un puerto aleatorio.
+- Casos mínimos (17 pruebas en total contando las de contrato):
+  1. **Caso A**, "¿Cuántas aplicaciones usan Java 17?":
+     - El texto contiene `Hay 3 aplicaciones registradas sobre Java 17` exactamente una vez (sin duplicación por el evento agregado).
+     - Tools = [`find_apps_by_runtime`]; la evidencia incluye `app:core-tarjetas`.
+     - `coverage` = `{metamodelVersion: "1.0.0", snapshot: 0, answered: true, source: "graph"}`.
+     - El primer evento es `meta` y el último `done`.
+  2. **Caso B**, con la misma `sessionId` en toda la prueba:
+     - "¿Qué runtime usa PAUS?" responde `No tengo información sobre «PAUS»` con `answered:false`.
+     - Se ingestan las dos muestras: `completed` con `nodesAdded >= 3`.
+     - La misma pregunta ahora contiene `PAUS (Application), corre sobre Java 17` y `Fuente: ADR-101`, con `answered:true` y `snapshot:1`.
+  3. **Pregunta repetida en la misma sesión:** sin tools y `source: "memory"`.
+  4. **`session_lost`** entre dos preguntas de la misma sesión: sin `error` y la respuesta menciona Pagos PSE (pregunta sobre Java 11).
+  5. **`unavailable`:** `error` `AGENT_UNAVAILABLE` y último evento `done`.
+  6. **`slow`:** `AGENT_TIMEOUT`.
+  7. **`midstream`:** al menos un `tool`, luego `error` `AGENT_ERROR` y `done`.
+  8. **`agent_error`:** `AGENT_ERROR` con mensaje que contiene 429.
+  9. **Validaciones HTTP:**
+     - 400 sin pregunta.
+     - 415 con un `.pdf`.
+     - `x-correlation-id` propagado.
+     - `/` sirve HTML que contiene "Enterprise Brain".
+
+  Antes de cada caso de resiliencia se resetea la falla a `none`.
+
+**`test/contract-adk.test.ts`**
+- Usa `ADK_BASE_URL` si existe (más `ADK_PATH_PREFIX`, `ADK_APP_NAME` y un `ADK_BEARER_TOKEN` opcional); si no, arranca el mock.
+- Verifica:
+  1. `/list-apps` incluye la app.
+  2. `run_sse` con `streaming:true` responde 200 con eventos que traen `id`, `author` e `invocationId`, sin `error` ni `errorCode`.
+  3. Los parciales de un turno, concatenados, son iguales al texto del evento agregado.
+  4. Cada `functionResponse` trae `{nodes, edges}`, directo o en `result`. Si la pregunta (`CONTRACT_QUESTION`) no dispara tools, la prueba se marca skip.
+  5. Una sesión inexistente devuelve 404.
+- Esta prueba es la que luego se ejecuta contra el agente ADK real.
+
+### Restricciones generales
+
+- DEBE: manejar errores en todo `fetch` y en todo parseo; mantener el estado del BFF solo en memoria (la PoC se despliega con una instancia); escribir comentarios solo donde expliquen una decisión no obvia (por ejemplo, el timeout de conexión o la deduplicación de parciales).
+- NO DEBE: agregar autenticación de usuario final, bases de datos, Redis, frameworks de front ni librerías no listadas; cambiar nombres de endpoints, eventos, campos, exports o textos de plantilla especificados.
+- Si una prueba falla, corrige la implementación, no la prueba. Solo puedes ajustar una prueba si contradice esta especificación, y debes reportarlo.
+
+### Criterios de aceptación
+
+- [ ] `npm install`, `npm run typecheck` y `npm run build` sin errores.
+- [ ] `npm test`: 17 pruebas, 0 fallos, 0 skips contra el mock.
+- [ ] `npm run demo` levanta 8000, 8001 y 8080. En `http://localhost:8080` el guion (Java 17 → PAUS sin datos → cargar las 2 muestras → PAUS con datos) muestra `snapshot 1`, la evidencia en el SVG y la cobertura "respaldada por el grafo".
+- [ ] Todos los nombres de archivos, exports, variables, endpoints, eventos y textos coinciden con esta especificación.
 
 ## Contexto
-Se presentará a la dirección y a todo el equipo, con proyector. Objetivo: que entienda sin dudas cómo funciona el metamodelo, qué se estructuró y diseñó, y qué valor da al banco. Debe impresionar y poder recorrerse sin que nadie pelee con la herramienta en vivo. Los datos son ficticios ("Banco Ejemplo").
 
-<motor>
-Entrada: grafo `{componentes:{id:{id,tipo,padre?,campos,nombre,workspace}}, referencias:[{tipo,origen,destino,campos}]}` y `mm.propagacion_impacto = {dependencias:{referencias:[es_soportado_por,se_conecta_a,usa], campo_atenuante:"critica"}, realizacion:{referencias:[es_realizada_por]}, jerarquia:{arrastran_hijos:[Plataforma,Aplicacion,ModuloAplicacion], hijo_afecta_padre:true}}`.
-impacto devuelve `{estado:{id:"caido"|"degradado"}, ronda:{id:n}, causa:{id:{via,rel}}}`. El origen: caido, ronda 0, rel "origen". Rondas SÍNCRONAS: en la ronda n solo se mira el estado al final de la ronda n-1 (copia) y, si un componente recibe varias propuestas, gana la de mayor gravedad (caido > degradado) y, a igualdad, la primera. Nunca se rebaja un estado. Termina cuando una ronda no cambia nada. Reglas por ronda:
-(a) para cada referencia de las de dependencias cuyo destino está afectado: el origen queda igual de grave que el destino, salvo que la referencia tenga `campos.critica === false`, caso en que queda degradado; rel = tipo de la referencia.
-(b) para cada componente con referencias es_realizada_por: sean R sus destinos y A los afectados; si hay A: caido solo si todos los de R están caidos, si no degradado; via = primer afectado; rel "es_realizada_por".
-(c) jerarquía: si un padre de tipo en arrastran_hijos está caido, todos sus hijos quedan caidos (rel "hijo_de", via = padre); si algún hijo está afectado, el padre queda degradado y caido si TODOS sus hijos están caidos (rel "tiene_hijo", via = primer hijo afectado).
-contexto(grafo, app) devuelve: duenos (Persona con es_dueno_de hacia la app), capacidades (CapacidadNegocio con es_realizada_por hacia la app), entornos (Entornos a los que es_soportado_por la app o sus hijos, sin repetir, con `nube` = su Plataforma padre es nube_publica), datos (EntidadDatos que almacenan las BaseDatos usadas por la app o sus hijos, ordenadas), dependencias (aplicación dueña de cada API a la que se_conecta_a la app o sus hijos, distinta de la app, `critica` salvo critica:false), declarada (regulacion), faltan (SFC-CE-005-2019 si corre en nube pública; LEY-1581-2012 si algún dato tiene datos_personales; menos las declaradas; ordenado), adrs (ADR con decide_sobre a la app), waivers (Waiver con se_otorga_a la app).
-</motor>
+En Banco Davivienda se construye el "Enterprise Brain" de la Plataforma de Arquitectura: un metamodelo de arquitectura (aplicaciones, runtimes, dependencias, ADRs) persistido como grafo, consultable en lenguaje natural mediante un "Agente Triage" construido con Google ADK sobre Gemini. Otro equipo construye ese agente y no estará listo a tiempo. Este proyecto es la pieza intermedia: el BFF que conecta el front con el agente. Se construye contra un agente simulado fiel al contrato de ADK, para validar la integración sin esperar al otro equipo. Cuando el agente real exista, solo debe cambiar `ADK_BASE_URL` y la prueba de contrato confirmará si encajan.
 
-<diseno>
-Escenario fijo de 1920x1080 escalado con transform para caber en la ventana (centrado, fondo blanco). Tema BLANCO con rojo institucional: rojo #DA0F1F, rojo oscuro #9F0A16, rojo claro #FDECEE, tinta #1C1C1E, gris #6B7280, líneas #E3E4E8, ámbar #F5A524, verde #1E9E5A. Tipografía del sistema (Segoe UI, Helvetica Neue, Arial). Banda roja de 12 px arriba; cabecera con marca "Metamodelo de arquitectura · Banco Ejemplo" y puntos de progreso clicables (el activo es una píldora roja); pie "Datos ficticios · Banco Ejemplo" y "← → navegar · F pantalla completa · N notas". NO usar logos ni nombres de entidades reales.
-Navegación: ← → Espacio RePág AvPág Inicio Fin, F (pantalla completa), N (panel oscuro de notas del presentador abajo), R (repetir acto), 1 a 6 (ir al acto). Transición de 0,5 s (fundido y desplazamiento de 40 px). URL: `#3` abre el acto 3 (1 a 6); `#4:PLT-002` simula esa caída; `#4:cmp` abre la comparación; `#5:banco` abre el estado de todo el banco.
-Actos (índice 1 a 6):
-1 Portada: etiqueta "ARQUITECTURA EMPRESARIAL", título "El mapa vivo / de cómo se conecta / el banco" (la palabra "conecta" en rojo), subtítulo "Aplicaciones, datos, tecnología, riesgo y regulación en un solo modelo que se puede consultar, validar y simular.", pie "Equipo de Arquitectura Empresarial · Datos ficticios de “Banco Ejemplo”". A la derecha un grafo decorativo SVG de 15 nodos rojos y rosados que laten.
-2 "1 · El problema": título "Hoy la arquitectura vive dispersa" (dispersa en rojo); dos tarjetas. "Hoy" (✕ gris): Inventarios en Excel y presentaciones desactualizadas / Cada solicitud al ARB se revisa leyendo documentos / Las reglas se aplican de memoria / El impacto de una caída se descubre durante el incidente. "Con el metamodelo" (✓ rojo, fondo rojo claro): "Un solo grafo: 71 componentes y 142 relaciones" (cifras leídas del grafo) / Cada hecho tiene un ID que se puede citar / 14 reglas automáticas con semáforo / El impacto de una caída se calcula en segundos. Los ítems aparecen escalonados (450 ms). Franja final "Preparar una revisión del ARB: ~3 días → minutos" con la nota "cifras ilustrativas"; las cifras viven en una constante `CIFRAS_ILUSTRATIVAS` fácil de editar.
-3 "2 · Qué estructuramos": título "Un lenguaje común para todo el banco"; 4 contadores animados (áreas, tipos de componente, tipos de relación, conexiones permitidas: se calculan del mm: 6, 23, 27, 65). Rejilla 3x2 de tarjetas por área con chips por tipo (nombres amigables: Capacidad de negocio, Módulo de aplicación, Unidad organizacional, etc.); subtítulos: Organización "Quién es quién", Negocio "Qué hace el banco", Aplicaciones "Qué sistemas lo soportan", Datos "Qué información maneja", Tecnología "Dónde y cómo corre", Gobierno "Reglas, decisiones y riesgo". Al elegir un chip (por defecto Aplicación) un panel a la derecha muestra: nombre, etiqueta del área, etiqueta "Concepto de referencia" si su `origen` empieza por "[Referencia]" o "Diseño propio", "Hijo de: …", las 7 primeras relaciones como frases (la frase del tipo de referencia con {o} y {d} reemplazados por los nombres amigables; primero las salientes) con su cardinalidad ("exactamente 1", "mín. 1", "máx. 1"), "y N conexiones más…" y los datos obligatorios. Dos botones: "✓ Conexión permitida" (caja verde: Capacidad de negocio es realizada por Aplicación está definido) y "✕ Conexión no permitida" (caja roja con sacudida: ERROR E012 · Aplicación es realizada por Aplicación no está definido en el metamodelo).
-4 "3 · Mapa vivo" (el momento estelar): fila de controles con "¿Qué pasa si cae…?", botones AWS (PLT-002), OpenShift (PLT-001), GCP (PLT-003), Comparar, Reiniciar, y a la derecha tres marcadores grandes rojos: componentes, aplicaciones, capacidades afectados (excluye el origen). SVG viewBox 1500x740 (ancho 1700 px en pantalla) con tres bandas redondeadas (negocio fondo #FDF3F4; aplicaciones y tecnología #F4F5F7) y rótulos verticales NEGOCIO, APLICACIONES, TECNOLOGÍA. 37 nodos (rect redondeado 128x44; arriba el ID en negrita y abajo el nombre truncado a 18 caracteres + "…"; el título del nodo con el nombre completo) en estas posiciones (centro x, borde superior y): CAP-100 400,18; CAP-200 800,18; CAP-300 1240,18; PRC-002 240,98; CAP-110 400,98; PRC-001 560,98; CAP-210 720,98; CAP-220 880,98; CAP-310 1240,98; APP-001 150,205; APP-004 310,205; APP-002 560,205; APP-003 840,205; APP-005 1040,205; APP-006 1240,205; MOD-001 150,290; MOD-003 310,290; MOD-002 500,290; MOD-006 650,290; MOD-004 800,290; MOD-005 950,290; IFZ-001 1360,290; API-004 310,375; API-001 500,375; API-003 800,375; API-002 950,375; BDD-002 500,485; BDD-001 650,485; TPR-001 800,485; TPR-002 950,485; BDD-003 1240,485; ENT-002 230,565; ENT-001 720,565; ENT-003 1240,565; PLT-002 230,645; PLT-001 720,645; PLT-003 1240,645. Aristas (curvas Bézier verticales, gris tenue, opacidad .28) para cada referencia es_soportado_por, se_conecta_a, usa y es_realizada_por entre nodos mostrados, y para la jerarquía padre-hijo (punteada); una sola arista por par; si ambos están en la misma fila, un arco por encima. Al simular una caída: los no afectados se atenúan; cada ronda aparece cada 750 ms; los nodos pasan a rojo (caído) o ámbar (degradado) con un pulso de 0,7 s; el origen en rojo oscuro con borde negro; la arista causal de cada nodo (hacia `causa.via`) se resalta en rojo grueso con resplandor; los marcadores cuentan a medida que avanzan las rondas. Clic en un componente afectado (no origen) abre una tarjeta "¿Por qué cae?" con la cadena causal en frases ("X depende de / se conecta a / usa / es realizada por / es parte de / contiene a Y"); clic en cualquier otro componente simula su caída. "Comparar" abre un panel con barras animadas para AWS, OpenShift y GCP (componentes afectados) y la frase "Si cae OpenShift se ven afectadas 7 de las 7 capacidades de negocio (AWS: 4). Eso es concentración de riesgo, y hoy no se ve hasta que ocurre." (cifras calculadas). Leyenda: caído, degradado, sin afectación.
-5 "4 · El valor para el ARB": título "La solicitud llega con los hechos y un semáforo". Izquierda, tarjeta de SOL-001 con los hechos de `contexto(APP-006)` (aplicación, tier y fase en español: "en implementación"; RTO/RPO y dueño; capacidad; corre en "(nube pública)"; datos con [clasificación]; depende de "(no crítica)"; regulación declarada y, en rojo, "Falta declarar SFC-CE-005-2019"; ADR con su estado; excepciones). Derecha, las 14 reglas (id y descripción de `reglas`) que se encienden una a una (300 ms), ✓ verde o ✕ rojo con el mensaje; fallan solo las que tienen hallazgo en APP-006 o sus hijos según `consistencia`; al final un semáforo grande: AMARILLO con "2 hallazgos". Botón "Ver el estado de todo el banco": panel con color ROJO, 6 hallazgos, fecha de corte y la tabla (regla, severidad alta/media, componente, mensaje) de `consistencia`; botón "Volver a la solicitud".
-6 Cierre: etiqueta "LO QUE LOGRAMOS"; frase grande con barra roja "Decidimos y gobernamos con hechos conectados, no con supuestos." (constante `FRASE_CIERRE`); tres cifras grandes animadas (71 componentes conectados, 142 relaciones con significado, 14 reglas que se evalúan solas); tres tarjetas rojo claro: "Decisiones más rápidas" (El ARB recibe hechos con ID citables y un semáforo, no documentos para leer.), "Riesgo a la vista" (Concentración de riesgo y dependencias visibles antes del incidente, no durante.), "Cumplimiento trazable" (SFC CE 007/2018, CE 005/2019 y Ley 1581 conectadas a las aplicaciones que les aplican.); y "Siguiente paso propuesto: piloto con un dominio de 20 a 30 aplicaciones reales, ajustando listas y escalas a las del banco."
-Notas del presentador: un párrafo corto por acto (qué decir y qué botón tocar; advertir que las cifras del acto 1 son ilustrativas).
-</diseno>
+La demo para ejecutivos tiene dos casos:
+- **A:** una consulta sobre datos ya cargados.
+- **B:** una pregunta sin datos, en la que el sistema admite que no sabe; se ingesta un ADR y una vista, y la misma pregunta se responde con evidencia. Esto demuestra que el conocimiento crece.
 
-<esperado>
-- `node probar-motor.js`: el motor coincide con validar.js en los 71 componentes y el contexto de APP-006 es: dueño PER-002, capacidad CAP-310, entorno ENT-003 con nube true, dato DAT-004, depende de APP-003 con critica false, falta SFC-CE-005-2019, ADR-004, sin waivers.
-- Caída de PLT-002 (AWS): 12 componentes, 2 aplicaciones, 4 capacidades. PLT-001 (OpenShift): 28, 6 y 7. PLT-003 (GCP): 6 componentes.
-- Contadores del acto 3: 6, 23, 27 y 65. Cierre: 71, 142 y 14. Acto 5: AMARILLO con 2 hallazgos (GRF-007 y GRF-012); todo el banco: ROJO con 6.
-- Sin errores en consola; ningún texto pisado ni fuera de margen en las capturas.
-</esperado>
+Restricciones del entorno: el desarrollo ocurre en un workspace sin Python y sin port-forward, por eso todo es Node/TypeScript y las pruebas automatizadas son la verificación principal.
+
+Fuera de alcance: UI final (tipo "Jarvis"), autenticación de usuarios, persistencia real, despliegue, el agente real y el backend real de ingesta.
 
 ## Formato
-- Archivos: `demo/motor.js`, `probar-motor.js`, `plantilla.html`, `construir.js`, `metamodelo-demo.html`, `README.md`.
-- Código con comentarios breves en español. HTML válido, un solo archivo final.
-- Tu respuesta final: tabla "criterio de <esperado> | resultado real | OK/FALLA" con salidas reales, y lista de desviaciones o supuestos (si no hay, "ninguno"). Sin preámbulo ni resumen.
+
+- Trabaja directamente creando los archivos en disco y ejecutando comandos; no pegues el código en el chat.
+- Al terminar responde solo con:
+  1. Árbol de archivos creados.
+  2. Salida resumida de typecheck, build y `npm test` (tests, pass, fail, skipped).
+  3. Checklist de criterios de aceptación marcada.
+  4. Decisiones que tomaste donde la especificación era ambigua (máximo 5 viñetas).
+- Sin preámbulo, sin resumen final, sin emojis, en español.
+- Antes de responder, verifica tu salida contra los criterios de aceptación. Si alguno no se cumple, sigue trabajando hasta cumplirlo.
