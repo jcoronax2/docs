@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Enterprise Brain</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one dark control-room stage. Hero + live console first, then the mechanism, then the demo script. Single dark look by choice. */
+:root{
+  --bg:#0b1020; --bg2:#101730; --panel:#141c38; --line:#243055; --fg:#e8ecf6; --muted:#9aa6c6;
+  --red:#e2302a; --red2:#ff6a5c; --cyan:#4fd1ff; --gold:#f5c04c; --green:#58d68d; --violet:#a78bfa;
+  --display:'Sora',system-ui,sans-serif; --body:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.55;margin:0;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.1}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--red2)}
+a{color:var(--cyan)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* HERO */
+.hero{padding-block:48px 24px;position:relative}
+.hero .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:32px;align-items:end}
+.hero h1{font-size:clamp(2.6rem,6vw,4.6rem);font-weight:700;letter-spacing:-.02em}
+.hero h1 span{color:var(--red)}
+.hero .lead{font-size:1.1rem;color:var(--muted);max-width:52ch;margin-top:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;font-variant-numeric:tabular-nums}
+.stat{border-left:2px solid var(--line);padding-left:12px}
+.stat b{display:block;font-family:var(--display);font-size:1.6rem;color:var(--fg)}
+.stat span{font-size:.78rem;color:var(--muted)}
+.note{font-size:.72rem;color:var(--muted);font-family:var(--mono);margin-top:10px}
+
+/* CONSOLE */
+.console{margin-top:28px;border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)}
+.cbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:.72rem;color:var(--muted);flex-wrap:wrap}
+.cbar .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);margin-right:6px;vertical-align:middle}
+.cbody{display:grid;grid-template-columns:1.2fr 1fr;min-height:520px}
+.gpane{position:relative;background:radial-gradient(ellipse at 50% 40%,#182250 0%,#0e1430 60%,#0b1020 100%);min-width:0}
+.gpane canvas{display:block;width:100%;height:100%}
+.legend{position:absolute;left:12px;bottom:12px;display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:.66rem;color:var(--muted)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.hud{position:absolute;right:12px;top:12px;font-family:var(--mono);font-size:.7rem;color:var(--cyan);text-align:right;font-variant-numeric:tabular-nums;line-height:1.5}
+.hud b{color:var(--fg);font-weight:500}
+.apane{border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:14px;border-bottom:1px solid var(--line)}
+.chip{border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:999px;padding:7px 12px;font-size:.8rem;text-align:left;transition:border-color .2s,background .2s}
+.chip:hover{border-color:var(--cyan)}
+.chip[aria-pressed="true"]{background:rgba(226,48,42,.16);border-color:var(--red)}
+.thread{padding:14px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:12px;font-size:.9rem}
+.msg{max-width:100%}
+.q{align-self:flex-end;background:rgba(79,209,255,.1);border:1px solid rgba(79,209,255,.3);border-radius:12px 12px 2px 12px;padding:10px 12px}
+.trace{font-family:var(--mono);font-size:.72rem;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.trace .step{display:flex;gap:8px;align-items:baseline;opacity:.35;transition:opacity .3s}
+.trace .step.on{opacity:1;color:var(--fg)}
+.trace .step em{font-style:normal;color:var(--gold);min-width:5.5ch}
+.cy{background:#0a0f22;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:var(--mono);font-size:.72rem;color:#b9d9ff;white-space:pre-wrap;word-break:break-word;margin-top:4px}
+.cy .k{color:var(--violet)}.cy .r{color:var(--gold)}
+.a{background:var(--bg2);border:1px solid var(--line);border-radius:2px 12px 12px 12px;padding:12px 14px}
+.a p{margin-bottom:8px}
+.cite{display:inline-block;font-family:var(--mono);font-size:.68rem;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--cyan);margin:0 2px;vertical-align:1px}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.act button{background:transparent;border:1px solid var(--red);color:var(--fg);border-radius:8px;padding:6px 10px;font-size:.78rem}
+.caret{display:inline-block;width:.55em;height:1em;background:var(--red2);vertical-align:-2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.input{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+.input input{flex:1;min-width:0;background:#0a0f22;border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:10px 12px;font:inherit}
+.input button{background:var(--red);color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:600}
+
+/* SECTIONS */
+section{padding-block:64px}
+.sec-h{max-width:60ch;margin-bottom:32px}
+.sec-h h2{font-size:clamp(1.7rem,3.5vw,2.5rem);margin-top:10px}
+.sec-h p{color:var(--muted);margin-top:12px}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.flow .st{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;position:relative;min-width:0}
+.flow .st .n{font-family:var(--mono);color:var(--gold);font-size:.72rem}
+.flow .st h3{font-size:1.05rem;margin-top:8px}
+.flow .st p{color:var(--muted);font-size:.86rem;margin-top:8px}
+.flow .st code{font-family:var(--mono);font-size:.72rem;color:var(--cyan)}
+.types{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.ty{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;gap:10px;align-items:flex-start}
+.ty i{flex:none;width:12px;height:12px;border-radius:50%;margin-top:5px}
+.ty b{display:block;font-family:var(--display);font-size:.95rem}
+.ty span{font-size:.8rem;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;min-width:0}
+.card .tag{font-family:var(--mono);font-size:.68rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase}
+.card h3{font-size:1.1rem;margin-top:10px}
+.card p{color:var(--muted);font-size:.88rem;margin-top:10px}
+.card .ex{margin-top:12px;border-left:2px solid var(--red);padding-left:10px;font-size:.84rem;color:var(--fg)}
+.card .ex em{font-style:normal;color:var(--muted)}
+.script{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:90px 1fr 1.2fr;gap:16px;padding:16px 18px;border-top:1px solid var(--line);min-width:0}
+.row:first-child{border-top:0;background:var(--panel);font-family:var(--mono);font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.row .t{font-family:var(--mono);color:var(--gold);font-variant-numeric:tabular-nums}
+.row .w{color:var(--muted);font-size:.9rem}
+.row .w b{color:var(--fg);font-weight:500}
+footer{padding-block:32px 48px;border-top:1px solid var(--line);color:var(--muted);font-size:.8rem;font-family:var(--mono)}
+
+@media (max-width:860px){
+  .hero .grid{grid-template-columns:1fr}
+  .cbody{grid-template-columns:1fr}
+  .gpane{height:340px}
+  .apane{border-left:0;border-top:1px solid var(--line)}
+  .flow{grid-template-columns:1fr 1fr}
+  .cards{grid-template-columns:1fr}
+  .row{grid-template-columns:70px 1fr}
+  .row .w{grid-column:2}
+}
+@media (max-width:520px){.flow{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:reduce){.caret{animation:none}}
+</style>
+</head>
+<body>
+
+<header class="hero wrap">
+  <div class="grid">
+    <div>
+      <div class="eyebrow">Dirección de Arquitectura Tecnológica Corporativa · Plataforma de Arquitectura</div>
+      <h1 style="margin-top:14px">Enterprise <span>Brain</span></h1>
+      <p class="lead">La memoria viva de la arquitectura del banco. Cada aplicación, decisión, lineamiento, riesgo y equipo conectados en un grafo de conocimiento que responde preguntas con evidencia, no con opiniones.</p>
+    </div>
+    <div>
+      <div class="stats" aria-label="Tamaño del grafo (datos de ejemplo)">
+        <div class="stat"><b id="sNodes">3.842</b><span>nodos</span></div>
+        <div class="stat"><b id="sRels">11.907</b><span>relaciones</span></div>
+        <div class="stat"><b>9</b><span>tipos de entidad</span></div>
+      </div>
+      <p class="note">Neo4j · GraphRAG · Agente de triage · cifras ilustrativas para la demo</p>
+    </div>
+  </div>
+
+  <div class="console" id="console">
+    <div class="cbar">
+      <span><span class="dot"></span>enterprise-brain · neo4j://arq-graph · agente conectado</span>
+      <span id="clock">—</span>
+    </div>
+    <div class="cbody">
+      <div class="gpane">
+        <canvas id="g" aria-label="Grafo de conocimiento de arquitectura animado"></canvas>
+        <div class="hud" id="hud"><b>en reposo</b><br>hops 0 · nodos 0 · 0 ms</div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="apane">
+        <div class="chips" id="chips" role="group" aria-label="Preguntas de ejemplo"></div>
+        <div class="thread" id="thread">
+          <div class="msg a"><p>Soy el Enterprise Brain. Pregúntame por impacto, decisiones vigentes, riesgos o dueños de cualquier pieza de la arquitectura. Cada respuesta llega con su rastro en el grafo.</p></div>
+        </div>
+        <form class="input" id="form">
+          <input id="qin" placeholder="Escribe una pregunta o elige una arriba" aria-label="Pregunta">
+          <button type="submit">Preguntar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="wrap">
+  <div class="sec-h">
+    <div class="eyebrow">Cómo responde</div>
+    <h2>De una pregunta en lenguaje natural a una respuesta con evidencia en cuatro pasos</h2>
+    <p>Ningún paso es una caja negra. El presidente ve la consulta que el agente ejecutó y los nodos que tocó.</p>
+  </div>
+  <div class="flow">
+    <div class="st"><div class="n">1 · Intención</div><h3>El agente clasifica la pregunta</h3><p>Impacto, cumplimiento, dependencia, dueño, costo. El Agente Triage (ADK) decide qué patrón de recorrido aplica.</p><code>intent: BLAST_RADIUS</code></div>
+    <div class="st"><div class="n">2 · Cypher</div><h3>Genera la consulta sobre Neo4j</h3><p>Texto a Cypher guiado por el esquema del grafo, no por búsqueda de texto. Multi-hop con profundidad acotada.</p><code>MATCH (a)-[:USES*1..3]-&gt;(k)</code></div>
+    <div class="st"><div class="n">3 · Evidencia</div><h3>Recorre y recoge el subgrafo</h3><p>Nodos, relaciones y propiedades con fecha de vigencia y fuente. Lo que no está en el grafo no se inventa.</p><code>47 nodos · 3 hops · 212 ms</code></div>
+    <div class="st"><div class="n">4 · Respuesta</div><h3>Sintetiza y cita</h3><p>Cada afirmación referencia un ADR, lineamiento o aplicación. Acciones sugeridas listas para ejecutar.</p><code>[ADR-042] [LIN-SEC-07]</code></div>
+  </div>
+</section>
+
+<section class="wrap" style="padding-top:0">
+  <div class="sec-h">
+    <div class="eyebrow">Lo que el grafo conoce</div>
+    <h2>Nueve tipos de entidad, una sola red</h2>
+  </div>
+  <div class="types" id="types"></div>
+</section>
+
+<section class="wrap" style="padding-top:0">
+  <div class="sec-h">
+    <div class="eyebrow">Capacidades de alto impacto</div>
+    <h2>Lo que hace que una presidencia se quede mirando la pantalla</h2>
+    <p>Seis capacidades ordenadas por relación esfuerzo / impacto para la demo. Las tres primeras son viables con el grafo cargado y el agente actual.</p>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="tag">Viernes · listo</div><h3>Radio de impacto en vivo</h3><p>Toca un nodo o nombra un componente y el grafo ilumina todo lo que depende de él, con número de clientes y canales expuestos.</p><div class="ex">"Si cae Keycloak, ¿qué deja de funcionar?" <em>· 14 apps, 3 canales, 2 procesos críticos</em></div></div>
+    <div class="card"><div class="tag">Viernes · listo</div><h3>Trazabilidad visible</h3><p>Cada respuesta muestra el Cypher ejecutado y los nodos tocados. No es un chatbot que opina; es un sistema que demuestra.</p><div class="ex">"¿Por qué dices eso?" <em>· despliega el recorrido y las fuentes</em></div></div>
+    <div class="card"><div class="tag">Viernes · listo</div><h3>Decisiones con fecha de vigencia</h3><p>Los ADRs y lineamientos tienen validFrom / validTo. El grafo sabe qué estaba vigente cuando se tomó una decisión y qué ya expiró.</p><div class="ex">"¿Qué restringe hoy lanzar Bre-B 2.0?" <em>· 3 lineamientos vigentes, 1 ADR vencido</em></div></div>
+    <div class="card"><div class="tag">Siguiente sprint</div><h3>Simulación what-if</h3><p>Propón un cambio hipotético (migrar un dominio, retirar un vendor) y el grafo calcula el impacto antes de que exista un proyecto.</p><div class="ex">"¿Y si consolidamos los tres BFF de canales?" <em>· deuda eliminada, riesgos nuevos</em></div></div>
+    <div class="card"><div class="tag">Siguiente sprint</div><h3>Radar de desviación en CI/CD</h3><p>Cada pull request se contrasta con los lineamientos del grafo. La arquitectura deja de ser un documento y pasa a ser un control automático.</p><div class="ex">"¿Cuántos despliegues violaron un lineamiento este mes?" <em>· 7, listados con equipo y ADR</em></div></div>
+    <div class="card"><div class="tag">Trimestre</div><h3>Pregúntale desde Google Chat</h3><p>El mismo cerebro disponible donde el banco ya conversa. Un gerente pregunta por el dueño de un servicio sin abrir ninguna herramienta nueva.</p><div class="ex">"@brain ¿quién es dueño del servicio de transferencias?" <em>· equipo, líder, SLA, último incidente</em></div></div>
+  </div>
+</section>
+
+<section class="wrap" style="padding-top:0">
+  <div class="sec-h">
+    <div class="eyebrow">Guion sugerido para el viernes</div>
+    <h2>Cuatro minutos, dos preguntas, una conclusión</h2>
+  </div>
+  <div class="script">
+    <div class="row"><span>Tiempo</span><span>Qué pasa en pantalla</span><span>Qué dice el presentador</span></div>
+    <div class="row"><span class="t">0:00</span><span class="w">El grafo respira en reposo. Se ve la escala: miles de nodos conectados.</span><span class="w"><b>"Esto es la arquitectura del banco, no un diagrama: cada punto es real y está conectado a lo que depende de él."</b></span></div>
+    <div class="row"><span class="t">0:40</span><span class="w">Pregunta 1 de impacto. El recorrido se ilumina hop a hop, la respuesta cita ADRs.</span><span class="w"><b>"Una pregunta que hoy toma dos semanas de reuniones, respondida con evidencia en segundos."</b></span></div>
+    <div class="row"><span class="t">2:00</span><span class="w">Pregunta 2 de vigencia (Bre-B 2.0). Aparece un lineamiento vencido en rojo.</span><span class="w"><b>"El grafo sabe qué reglas están vigentes y cuáles ya no. Nos avisa antes de que un proyecto choque con ellas."</b></span></div>
+    <div class="row"><span class="t">3:20</span><span class="w">Clic en "¿Por qué dices eso?": se abre el Cypher y los nodos tocados.</span><span class="w"><b>"No es un chatbot: es un sistema auditable. Cada respuesta puede defenderse ante un comité."</b></span></div>
+    <div class="row"><span class="t">4:00</span><span class="w">Volver al grafo en reposo. Cierre.</span><span class="w"><b>"Hoy lo alimenta arquitectura. El siguiente paso es que lo alimenten todos los equipos y lo consulte toda la organización."</b></span></div>
+  </div>
+</section>
+
+<footer class="wrap">
+  Prototipo de interacción · Las entidades, cifras y respuestas son datos de ejemplo para la demo. Neo4j es marca de Neo4j, Inc.
+</footer>
+
+<script>
+(function(){
+  // ---------- data ----------
+  const TYPES = [
+    ['Aplicación','#4fd1ff','Sistemas, canales y microservicios con dueño y SLA'],
+    ['Capacidad','#a78bfa','Capacidades de negocio y su mapa BIAN'],
+    ['Dominio','#f5c04c','Dominios técnicos y de negocio'],
+    ['Decisión (ADR)','#ff6a5c','Decisiones con contexto, consecuencias y vigencia'],
+    ['Lineamiento','#58d68d','Reglas obligatorias con fecha de vigencia'],
+    ['Riesgo','#ff9f43','Riesgos abiertos, severidad y mitigación'],
+    ['Equipo','#f78fb3','Equipos, líderes y responsabilidades'],
+    ['Proveedor','#7ed6df','Vendors, licencias y contratos'],
+    ['Infraestructura','#c7d2fe','Clusters, colas, bases de datos, redes']
+  ];
+  const typesEl = document.getElementById('types');
+  const legend = document.getElementById('legend');
+  TYPES.forEach(([n,c,d])=>{
+    typesEl.insertAdjacentHTML('beforeend',`<div class="ty"><i style="background:${c}"></i><div><b>${n}</b><span>${d}</span></div></div>`);
+    legend.insertAdjacentHTML('beforeend',`<span><i style="background:${c}"></i>${n.split(' ')[0]}</span>`);
+  });
+
+  // ---------- graph model ----------
+  const cv = document.getElementById('g'); const ctx = cv.getContext('2d');
+  const hud = document.getElementById('hud');
+  let W=0,H=0,DPR=1;
+  const nodes=[], edges=[];
+  const named = {};
+  function add(id,type,label,cx,cy,spread){
+    const n={id,type,label,x:cx+(Math.random()-.5)*spread,y:cy+(Math.random()-.5)*spread,vx:0,vy:0,r:type===3||type===4?3.4:2.8,lit:0,hot:0};
+    nodes.push(n); if(id) named[id]=n; return n;
+  }
+  function link(a,b,rel){edges.push({a,b,rel,lit:0});}
+  function build(){
+    nodes.length=0; edges.length=0;
+    const cl=[[.5,.5],[.18,.3],[.82,.3],[.2,.75],[.8,.75],[.5,.15],[.5,.85],[.32,.5],[.68,.5]];
+    // named anchors
+    const K=add('keycloak',7,'Keycloak',.5,.5,0);
+    const apps=['App Personas','App Empresas','Portal Web','Daviplata','Core Pagos','Bre-B 2.0','BFF Canales','Onboarding','Transferencias','Créditos','Tarjetas','API Gateway','Notificaciones','Cobranza'];
+    const A=apps.map((l,i)=>add('app'+i,0,l,cl[1+i%4][0],cl[1+i%4][1],.22));
+    A.forEach(a=>link(a,K,'USES'));
+    const adr=[['ADR-042','IAM centralizado en Keycloak'],['ADR-051','BFF por canal'],['ADR-063','Eventos en Kafka'],['ADR-071','Pagos inmediatos Bre-B'],['ADR-029','Monolito core (vencido)']];
+    const D=adr.map(([id,l],i)=>add(id,3,id,cl[5][0]+(i-2)*.12,cl[5][1],.1));
+    link(D[0],K,'DECIDES'); link(D[1],A[6],'DECIDES'); link(D[3],A[5],'DECIDES'); link(D[2],A[4],'DECIDES'); link(D[4],A[4],'DECIDES');
+    const lin=[['LIN-SEC-07','MFA obligatorio'],['LIN-PAY-03','Idempotencia en pagos'],['LIN-DAT-02','Residencia de datos'],['LIN-API-01','Contratos OpenAPI']];
+    const L=lin.map(([id,l],i)=>add(id,4,id,cl[6][0]+(i-1.5)*.14,cl[6][1],.08));
+    link(L[0],K,'CONSTRAINS'); link(L[1],A[5],'CONSTRAINS'); link(L[2],A[5],'CONSTRAINS'); link(L[3],A[11],'CONSTRAINS'); link(L[0],A[5],'CONSTRAINS');
+    const R1=add('R-118',5,'R-118 SPOF IAM',.33,.42,.03); link(R1,K,'THREATENS');
+    const R2=add('R-131',5,'R-131 Latencia Bre-B',.66,.6,.03); link(R2,A[5],'THREATENS');
+    const T=['Identidad','Canales','Pagos','Core','Datos','Seguridad'].map((l,i)=>add('team'+i,6,l,cl[7+i%2][0],cl[7+i%2][1],.18));
+    link(T[0],K,'OWNS'); link(T[1],A[6],'OWNS'); link(T[2],A[5],'OWNS'); link(T[2],A[4],'OWNS'); link(T[1],A[0],'OWNS'); link(T[1],A[1],'OWNS');
+    const C=['Pagos inmediatos','Autenticación','Onboarding digital','Transferencias','Crédito'].map((l,i)=>add('cap'+i,1,l,cl[2][0]+(i-2)*.07,cl[2][1]-.05,.1));
+    link(C[0],A[5],'ENABLED_BY'); link(C[1],K,'ENABLED_BY'); link(C[2],A[7],'ENABLED_BY'); link(C[3],A[8],'ENABLED_BY');
+    const DOM=['Clientes','Pagos','Riesgo','Canales'].map((l,i)=>add('dom'+i,2,l,cl[3][0]+i*.08,cl[3][1]-.1,.08));
+    link(DOM[1],A[5],'CONTAINS'); link(DOM[1],A[4],'CONTAINS'); link(DOM[3],A[6],'CONTAINS');
+    const INF=['EKS prod','Kafka','OpenShift','Azure AD','Postgres'].map((l,i)=>add('inf'+i,8,l,cl[4][0]+(i-2)*.06,cl[4][1]+.08,.08));
+    link(INF[3],K,'INTEGRATES'); link(INF[1],A[4],'RUNS_ON'); link(INF[0],A[6],'RUNS_ON'); link(INF[2],A[0],'RUNS_ON');
+    // filler nodes for scale
+    for(let i=0;i<110;i++){
+      const t=Math.floor(Math.random()*9); const c=cl[Math.floor(Math.random()*cl.length)];
+      const n=add('',t,'',c[0],c[1],.3);
+      const tgt=nodes[Math.floor(Math.random()*Math.min(nodes.length-1,60))];
+      link(n,tgt,'REL');
+      if(Math.random()<.4) link(n,nodes[Math.floor(Math.random()*nodes.length)],'REL');
+    }
+  }
+  build();
+
+  function resize(){
+    DPR=Math.min(2,window.devicePixelRatio||1);
+    const r=cv.parentElement.getBoundingClientRect(); W=r.width;H=r.height;
+    cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  resize(); window.addEventListener('resize',resize);
+
+  // light force simulation
+  function step(){
+    for(const n of nodes){
+      let fx=0,fy=0;
+      for(const m of nodes){ if(m===n) continue; const dx=n.x-m.x,dy=n.y-m.y; const d2=dx*dx+dy*dy+.0004; if(d2<.02){const f=.000012/d2;fx+=dx*f;fy+=dy*f;} }
+      n.vx=(n.vx+fx)*.85; n.vy=(n.vy+fy)*.85;
+    }
+    for(const e of edges){ const dx=e.b.x-e.a.x,dy=e.b.y-e.a.y; const d=Math.hypot(dx,dy)||1; const f=(d-.11)*.004; e.a.vx+=dx/d*f;e.a.vy+=dy/d*f;e.b.vx-=dx/d*f;e.b.vy-=dy/d*f; }
+    for(const n of nodes){ n.vx+=(.5-n.x)*.0006; n.vy+=(.5-n.y)*.0006; n.x=Math.min(.97,Math.max(.03,n.x+n.vx)); n.y=Math.min(.95,Math.max(.05,n.y+n.vy)); n.lit*=.97; }
+    for(const e of edges) e.lit*=.96;
+  }
+  const colors=TYPES.map(t=>t[1]);
+  let t0=performance.now(), pulses=[];
+  function draw(now){
+    step();
+    ctx.clearRect(0,0,W,H);
+    const ph=(now-t0)/1000;
+    for(const e of edges){
+      const ax=e.a.x*W,ay=e.a.y*H,bx=e.b.x*W,by=e.b.y*H;
+      ctx.strokeStyle=e.lit>.05?`rgba(245,192,76,${.25+e.lit*.75})`:'rgba(120,140,200,.14)';
+      ctx.lineWidth=e.lit>.05?1.2+e.lit*1.5:.7;
+      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+    }
+    for(const p of pulses){ const e=p.e; p.t+=.035; const x=(e.a.x+(e.b.x-e.a.x)*p.t)*W,y=(e.a.y+(e.b.y-e.a.y)*p.t)*H; ctx.fillStyle='#f5c04c'; ctx.beginPath();ctx.arc(x,y,2.2,0,7);ctx.fill(); }
+    pulses=pulses.filter(p=>p.t<1);
+    for(const n of nodes){
+      const x=n.x*W,y=n.y*H; const c=colors[n.type];
+      const breathe=.85+.15*Math.sin(ph*1.6+n.x*9+n.y*7);
+      const rr=n.r*breathe+(n.lit*5);
+      if(n.lit>.05){ ctx.fillStyle=`rgba(245,192,76,${n.lit*.35})`; ctx.beginPath();ctx.arc(x,y,rr*3.2,0,7);ctx.fill(); }
+      ctx.fillStyle=n.lit>.3?'#ffd97a':c; ctx.globalAlpha=n.label?1:.55;
+      ctx.beginPath();ctx.arc(x,y,rr,0,7);ctx.fill(); ctx.globalAlpha=1;
+      if(n.label && (n.lit>.15 || n.r>3 || W>700)){ ctx.font=`${n.lit>.3?'500 11px':'400 9.5px'} 'IBM Plex Mono',monospace`; ctx.fillStyle=n.lit>.3?'#fff':'rgba(200,210,240,.7)'; ctx.fillText(n.label,x+rr+4,y+3.5); }
+    }
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+
+  function litPath(ids, delay){
+    // sequentially light nodes and their edges
+    let d=0, touched=0;
+    ids.forEach((grp,i)=>{
+      setTimeout(()=>{ grp.forEach(id=>{ const n=named[id]; if(!n) return; n.lit=1; touched++; for(const e of edges){ if((e.a===n&&e.b.lit>.2)||(e.b===n&&e.a.lit>.2)){ e.lit=1; pulses.push({e,t:0}); } } });
+        hud.innerHTML=`<b>recorriendo</b><br>hops ${i} · nodos ${touched} · ${Math.round(60+i*70+Math.random()*30)} ms`; }, d);
+      d+=delay;
+    });
+    return d;
+  }
+
+  // ---------- use cases ----------
+  const CASES=[
+    {q:'Si cambiamos Keycloak como proveedor de identidad, ¿qué se ve afectado?',
+     intent:'BLAST_RADIUS', hops:[['keycloak'],['app0','app1','app2','app3','app6','app7','app11','app12','ADR-042','LIN-SEC-07'],['team0','team1','cap1','inf3','R-118','app4','app5','app8']],
+     cy:`<span class="k">MATCH</span> (v:Proveedor {nombre:'Keycloak'})&lt;-[<span class="r">:USES*1..3</span>]-(a:Aplicación)
+<span class="k">OPTIONAL MATCH</span> (a)&lt;-[<span class="r">:OWNS</span>]-(t:Equipo), (d:Decisión)-[<span class="r">:DECIDES</span>]-&gt;(v)
+<span class="k">WHERE</span> d.validTo IS NULL
+<span class="k">RETURN</span> a, t, d, count(a) AS impacto`,
+     steps:['intención BLAST_RADIUS · profundidad 3','Cypher generado y validado contra el esquema','47 nodos · 3 hops · 212 ms','síntesis con 4 citas'],
+     a:`<p><b>14 aplicaciones</b> dependen directa o transitivamente de Keycloak, incluidas las 4 de cara al cliente (App Personas, App Empresas, Portal Web, Daviplata) y el <b>API Gateway</b>, que lo convierte en punto único de falla <span class="cite">R-118</span>.</p><p>La decisión vigente que lo fija como IAM centralizado es <span class="cite">ADR-042</span> (2024-03, sin fecha de expiración). El lineamiento <span class="cite">LIN-SEC-07</span> exige MFA en todos los canales, así que cualquier reemplazo debe cumplirlo desde el día uno.</p><p>Dueños a convocar: <b>Identidad</b> y <b>Canales</b>. Integración afectada: Azure AD <span class="cite">inf3</span>.</p>`,
+     acts:['¿Por qué dices eso?','Generar plan de migración','Abrir ADR-042']},
+    {q:'¿Qué decisiones y lineamientos vigentes restringen lanzar Bre-B 2.0 en 60 días?',
+     intent:'COMPLIANCE_CHECK', hops:[['app5'],['ADR-071','LIN-PAY-03','LIN-DAT-02','LIN-SEC-07'],['R-131','team2','dom1','ADR-029','cap0']],
+     cy:`<span class="k">MATCH</span> (a:Aplicación {nombre:'Bre-B 2.0'})&lt;-[<span class="r">:CONSTRAINS|DECIDES</span>]-(r)
+<span class="k">WITH</span> a, r, r.validTo &lt; date() AS vencido
+<span class="k">OPTIONAL MATCH</span> (a)&lt;-[<span class="r">:THREATENS</span>]-(k:Riesgo)
+<span class="k">RETURN</span> r, vencido, k <span class="k">ORDER BY</span> r.severidad DESC`,
+     steps:['intención COMPLIANCE_CHECK · fecha de corte hoy','Cypher con filtro de vigencia (validFrom / validTo)','23 nodos · 2 hops · 148 ms','síntesis con 5 citas · 1 alerta de vigencia'],
+     a:`<p><b>3 lineamientos vigentes</b> aplican: idempotencia en pagos <span class="cite">LIN-PAY-03</span>, residencia de datos en Colombia <span class="cite">LIN-DAT-02</span> y MFA <span class="cite">LIN-SEC-07</span>. La decisión que habilita el producto es <span class="cite">ADR-071</span>.</p><p>Alerta: <span class="cite" style="color:var(--red2);border-color:var(--red2)">ADR-029</span> (core monolítico) <b>venció el 2026-06-30</b> y sigue referenciado por Core Pagos, del que depende Bre-B 2.0. Hay que renovarla o reemplazarla antes del lanzamiento.</p><p>Riesgo abierto: latencia p95 fuera de objetivo <span class="cite">R-131</span>, severidad alta, dueño equipo <b>Pagos</b>.</p>`,
+     acts:['¿Por qué dices eso?','Crear ADR de renovación','Ver riesgo R-131']},
+    {q:'¿Dónde está concentrada la deuda técnica por dominio y quién la tiene?',
+     intent:'DEBT_HEATMAP', hops:[['dom0','dom1','dom2','dom3'],['app4','app6','app0','app1','app5'],['ADR-029','ADR-051','team1','team2','team3','inf2']],
+     cy:`<span class="k">MATCH</span> (d:Dominio)-[<span class="r">:CONTAINS</span>]-&gt;(a:Aplicación)&lt;-[<span class="r">:DECIDES</span>]-(x:Decisión)
+<span class="k">WHERE</span> x.validTo &lt; date() <span class="k">OR</span> a.deuda_puntos &gt; 0
+<span class="k">RETURN</span> d.nombre, sum(a.deuda_puntos) AS deuda, collect(DISTINCT x.id) AS decisionesVencidas`,
+     steps:['intención DEBT_HEATMAP · agregación por dominio','Cypher con agregación y colecciones','61 nodos · 3 hops · 297 ms','síntesis con 3 citas · ranking'],
+     a:`<p>El <b>62 %</b> de la deuda registrada vive en el dominio <b>Pagos</b>: Core Pagos sigue sobre una decisión vencida <span class="cite">ADR-029</span> y concentra 2 riesgos abiertos. Le sigue <b>Canales</b> con los tres BFF duplicados <span class="cite">ADR-051</span>.</p><p>Dueños: equipo <b>Pagos</b> (Core Pagos, Bre-B 2.0) y equipo <b>Canales</b> (BFF Canales, App Personas, App Empresas). Infraestructura implicada: OpenShift <span class="cite">inf2</span>.</p><p>Si se consolidan los BFF, la deuda de Canales baja un 40 % estimado; el grafo puede simularlo.</p>`,
+     acts:['¿Por qué dices eso?','Simular consolidación de BFF','Exportar al comité']}
+  ];
+
+  const chips=document.getElementById('chips'), thread=document.getElementById('thread'), form=document.getElementById('form'), qin=document.getElementById('qin');
+  CASES.forEach((c,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=c.q; b.setAttribute('aria-pressed','false'); b.addEventListener('click',()=>run(i)); chips.appendChild(b); });
+  let busy=false;
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  async function type(el,html){
+    // typewriter over HTML: reveal by characters using a hidden buffer
+    const tmp=document.createElement('div'); tmp.innerHTML=html; const full=tmp.innerHTML;
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce){ el.innerHTML=full; return; }
+    let i=0, out='';
+    while(i<full.length){
+      if(full[i]==='<'){ const j=full.indexOf('>',i); out+=full.slice(i,j+1); i=j+1; }
+      else { out+=full[i]; i++; }
+      if(i%3===0){ el.innerHTML=out+'<span class="caret"></span>'; thread.scrollTop=thread.scrollHeight; await sleep(9); }
+    }
+    el.innerHTML=full;
+  }
+  async function run(i){
+    if(busy) return; busy=true;
+    const c=CASES[i];
+    [...chips.children].forEach((b,k)=>b.setAttribute('aria-pressed',String(k===i)));
+    thread.insertAdjacentHTML('beforeend',`<div class="msg q">${c.q}</div>`);
+    const tr=document.createElement('div'); tr.className='msg trace';
+    tr.innerHTML=c.steps.map((s,k)=>`<div class="step"><em>${['intent','cypher','graph','answer'][k]}</em><span>${s}</span></div>`).join('');
+    thread.appendChild(tr); thread.scrollTop=thread.scrollHeight;
+    const steps=tr.querySelectorAll('.step');
+    steps[0].classList.add('on'); await sleep(500);
+    steps[1].classList.add('on');
+    const cy=document.createElement('div'); cy.className='cy'; cy.innerHTML=c.cy; tr.appendChild(cy); thread.scrollTop=thread.scrollHeight; await sleep(700);
+    steps[2].classList.add('on');
+    const dur=litPath(c.hops,650); await sleep(dur+300);
+    steps[3].classList.add('on');
+    const a=document.createElement('div'); a.className='msg a'; thread.appendChild(a);
+    await type(a,c.a);
+    a.insertAdjacentHTML('beforeend',`<div class="act">${c.acts.map(x=>`<button type="button">${x}</button>`).join('')}</div>`);
+    a.querySelectorAll('.act button').forEach(b=>b.addEventListener('click',()=>{ if(b.textContent.startsWith('¿Por qué')){ cy.scrollIntoView({behavior:'smooth',block:'center'}); cy.style.borderColor='var(--gold)'; litPath(c.hops,250);} else { thread.insertAdjacentHTML('beforeend',`<div class="msg a"><p>Acción "<b>${b.textContent}</b>" disponible en la siguiente iteración: el agente ejecutará el flujo sobre la Plataforma de Arquitectura.</p></div>`); thread.scrollTop=thread.scrollHeight; } }));
+    thread.scrollTop=thread.scrollHeight;
+    hud.innerHTML=`<b>respondido</b><br>hops ${c.hops.length-1} · nodos ${c.hops.flat().length} · ${c.steps[2].match(/\d+ ms/)[0]}`;
+    busy=false;
+  }
+  form.addEventListener('submit',e=>{
+    e.preventDefault(); const v=qin.value.trim().toLowerCase(); qin.value='';
+    if(!v) return;
+    const idx = v.includes('keycloak')||v.includes('identidad')?0 : v.includes('bre-b')||v.includes('vigente')||v.includes('lineamiento')?1 : v.includes('deuda')||v.includes('dominio')?2 : -1;
+    if(idx>=0) run(idx);
+    else { thread.insertAdjacentHTML('beforeend',`<div class="msg q">${v}</div><div class="msg a"><p>En este prototipo respondo los tres casos de uso cargados. Prueba con una de las preguntas de arriba o menciona Keycloak, Bre-B 2.0 o deuda técnica.</p></div>`); thread.scrollTop=thread.scrollHeight; }
+  });
+
+  // clock + growing counters
+  const clock=document.getElementById('clock');
+  setInterval(()=>{ clock.textContent=new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' · Bogotá'; },1000);
+  let n=3842,r=11907; const sn=document.getElementById('sNodes'), sr=document.getElementById('sRels');
+  setInterval(()=>{ if(Math.random()<.5){ n+=1; r+=Math.random()<.7?3:2; sn.textContent=n.toLocaleString('es-CO'); sr.textContent=r.toLocaleString('es-CO'); } },2600);
+
+  // auto-run first case after a pause so the page is alive on open
+  setTimeout(()=>{ if(!busy) run(0); },1800);
+})();
+</script>
+</body>
+</html>
